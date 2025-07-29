@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getProfileAssessment } from '../services/api';
 
+// Reusable input field component
 const InputField = ({ label, type = "text", name, value, onChange, placeholder, error, readOnly = false }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -17,6 +18,7 @@ const InputField = ({ label, type = "text", name, value, onChange, placeholder, 
     </div>
 );
 
+// Reusable textarea component
 const TextAreaField = ({ label, name, value, onChange, placeholder, rows = 3 }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -32,6 +34,7 @@ const TextAreaField = ({ label, name, value, onChange, placeholder, rows = 3 }) 
 );
 
 const StudentProfilePage = () => {
+    // State for form inputs
     const [profile, setProfile] = useState({
         gradeLevel: '12',
         gpa: '3.8',
@@ -40,11 +43,15 @@ const StudentProfilePage = () => {
         apClasses: 'AP Biology, AP Calculus AB, AP US History',
         extracurriculars: 'Debate Club president, Varsity Soccer, Robotics Team',
     });
+    // State for validation errors
     const [errors, setErrors] = useState({});
+    // State for calculated graduation date
     const [expectedGradDate, setExpectedGradDate] = useState('');
-    const [assessment, setAssessment] = useState(null);
+    // **UPDATED:** State for the new narrative assessment text
+    const [assessmentText, setAssessmentText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    // Effect to auto-calculate graduation date
     useEffect(() => {
         const calculateGradDate = () => {
             if (!profile.gradeLevel) return '';
@@ -57,12 +64,14 @@ const StudentProfilePage = () => {
         setExpectedGradDate(calculateGradDate());
     }, [profile.gradeLevel]);
 
+    // Handle changes in form fields
     const handleChange = (e) => {
         const { name, value } = e.target;
         setProfile(prev => ({ ...prev, [name]: value }));
         if (errors[name]) validateField(name, value);
     };
 
+    // Validate a single field
     const validateField = (name, value) => {
         let errorMsg = '';
         if (name === 'gpa' && value && (value < 0 || value > 4.0)) errorMsg = 'GPA must be between 0.0 and 4.0.';
@@ -72,6 +81,7 @@ const StudentProfilePage = () => {
         return !errorMsg;
     };
 
+    // Handle the "Assess My Readiness" button click
     const handleAssess = async () => {
         const isValid = ['gpa', 'satScore', 'actScore'].every(field => validateField(field, profile[field]));
         if (!isValid) {
@@ -79,9 +89,9 @@ const StudentProfilePage = () => {
             return;
         }
         setIsLoading(true);
-        setAssessment(null);
+        setAssessmentText('');
         const result = await getProfileAssessment(profile);
-        setAssessment(result);
+        setAssessmentText(result.assessmentText);
         setIsLoading(false);
     };
 
@@ -93,6 +103,7 @@ const StudentProfilePage = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column: Data Entry */}
                 <div className="space-y-6">
                     <div className="bg-white p-6 rounded-xl shadow-sm border">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">🎓 Academic Basics</h2>
@@ -123,31 +134,25 @@ const StudentProfilePage = () => {
                     </button>
                 </div>
 
+                {/* Right Column: Assessment Results */}
                 <div className="space-y-6">
-                    {assessment && (
-                        <>
-                            <div className="bg-white p-6 rounded-xl shadow-sm border text-center">
-                                <h2 className="text-xl font-bold text-gray-800 mb-2">Your Readiness Score</h2>
-                                <p className="text-6xl font-bold text-blue-600 my-4">{assessment.readinessScore}<span className="text-2xl text-gray-400">/100</span></p>
-                                <div className="w-full bg-gray-200 rounded-full h-4">
-                                    <div className="bg-blue-600 h-4 rounded-full" style={{ width: `${assessment.readinessScore}%` }}></div>
+                    {/* **UPDATED:** This section now displays the narrative assessment */}
+                    {(isLoading || assessmentText) && (
+                        <div className="bg-white p-6 rounded-xl shadow-sm border">
+                            <h2 className="text-xl font-bold text-gray-800 mb-4">AI Readiness Assessment</h2>
+                            {isLoading ? (
+                                <p className="text-gray-500 animate-pulse">Generating your assessment...</p>
+                            ) : (
+                                <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
+                                    {assessmentText}
                                 </div>
-                            </div>
-                            <div className="bg-white p-6 rounded-xl shadow-sm border">
-                                <h2 className="text-xl font-bold text-gray-800 mb-4">Dynamic Recommendations</h2>
-                                <ul className="space-y-3">
-                                    {assessment.recommendations.map((rec, index) => (
-                                        <li key={index} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                                            <span className="text-green-600 font-bold">💡</span>
-                                            <span className="text-gray-700 text-sm">{rec}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                            )}
+                            {!isLoading && assessmentText && (
                                 <div className="flex justify-end mt-4">
-                                     <button onClick={() => alert('This would add these recommendations to your goals list.')} className="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg text-sm hover:bg-green-700">Add to My Goals</button>
+                                     <button onClick={() => alert('This would generate and download a PDF report.')} className="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg text-sm hover:bg-green-700">Download Report</button>
                                 </div>
-                            </div>
-                        </>
+                            )}
+                        </div>
                     )}
                      <div className="bg-white p-6 rounded-xl shadow-sm border">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">What-If Scenarios</h2>

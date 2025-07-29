@@ -86,3 +86,20 @@ export const getProfileAssessment = async (profileData) => {
         return { readinessScore: 0, recommendations: ["Could not generate recommendations due to an error."] };
     }
 };
+
+export const getProfileAssessment = async (profileData) => {
+    try {
+        const response = await fetch(`/api/profile/assess`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(profileData),
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json(); // Expects { assessmentText: "..." }
+    } catch (error) {
+        console.error("Failed to get profile assessment:", error);
+        return { assessmentText: "Could not generate recommendations due to an error." };
+    }
+};
