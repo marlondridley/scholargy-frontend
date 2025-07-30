@@ -130,3 +130,17 @@ export const calculateWhatIfScenarios = async (baseProfile, scenarios, collegeId
         return { results: [] };
     }
 };
+
+export const sendRagQuery = async (query) => {
+  const response = await fetch('/api/rag/query', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch RAG results');
+  }
+
+  return await response.json();
+};
