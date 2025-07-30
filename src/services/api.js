@@ -22,6 +22,17 @@ export const searchInstitutions = async (searchConfig) => {
 };
 
 /**
+ * matching colleges to studentprofile
+ */
+export const getTopMatches = async (profile) =>
+  axios.post('/api/rag/top-matches', profile).then(res => res.data);
+/**
+ * matching scholarships to studentprofile
+ */
+export const getScholarshipSummary = async (profile) =>
+  axios.post('/api/rag/scholarships', profile).then(res => res.data);
+
+/**
  * Fetches the complete, merged profile for a single institution by its ID.
  */
 export const getInstitutionDetails = async (unitId) => {
