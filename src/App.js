@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -12,6 +12,17 @@ function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('dashboard');
   const [selectedCollegeId, setSelectedCollegeId] = useState(null);
+  
+  // Centralized state for the student's profile
+  const [studentProfile, setStudentProfile] = useState(null);
+
+  // Load saved profile from localStorage on initial app load
+  useEffect(() => {
+      const savedProfile = localStorage.getItem('studentProfile');
+      if (savedProfile) {
+          setStudentProfile(JSON.parse(savedProfile));
+      }
+  }, []);
 
   const authContextValue = useMemo(() => ({
     user,
@@ -34,16 +45,16 @@ function App() {
   const renderView = () => {
     switch (view) {
       case 'profile':
-        return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} />;
+        return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} studentProfile={studentProfile} />;
       case 'report':
-        return <ReportPage collegeId={selectedCollegeId} onBack={() => setView('profile')} />;
+        return <ReportPage collegeId={selectedCollegeId} onBack={() => setView('profile')} studentProfile={studentProfile} />;
       case 'studentProfile':
-        return <StudentProfilePage />;
+        return <StudentProfilePage studentProfile={studentProfile} setStudentProfile={setStudentProfile} />;
       case 'studentVue':
         return <StudentVuePage />;
       case 'dashboard':
       default:
-        return <DashboardPage onSelectCollege={handleSelectCollege} setView={setView} />;
+        return <DashboardPage onSelectCollege={handleSelectCollege} setView={setView} studentProfile={studentProfile} />;
     }
   };
 

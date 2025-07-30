@@ -1,11 +1,10 @@
 // api.js - Centralizes all communication with the backend API.
 
-const API_BASE_URL = 'http://localhost:5001/api';
+// Use a relative path for the API base URL to work in both development and production.
+const API_BASE_URL = '/api';
 
 /**
  * Searches for institutions by sending a configuration object to the backend.
- * @param {object} searchConfig - The configuration for the search.
- * @returns {Promise<object>} - A promise that resolves to the API response { data, pagination }.
  */
 export const searchInstitutions = async (searchConfig) => {
   try {
@@ -24,8 +23,6 @@ export const searchInstitutions = async (searchConfig) => {
 
 /**
  * Fetches the complete, merged profile for a single institution by its ID.
- * @param {string} unitId - The unique ID of the institution.
- * @returns {Promise<object|null>} - A promise that resolves to the institution object or null if not found.
  */
 export const getInstitutionDetails = async (unitId) => {
   if (!unitId) return null;
@@ -43,32 +40,7 @@ export const getInstitutionDetails = async (unitId) => {
 };
 
 /**
- * Sends a question to the RAG (Retrieval-Augmented Generation) endpoint.
- * @param {string} question - The user's natural language question.
- * @returns {Promise<object>} - A promise that resolves to an object containing the AI-generated answer.
- */
-export const getRagAnswer = async (question) => {
-    if (!question) return { answer: "Please provide a question." };
-    try {
-        const response = await fetch(`${API_BASE_URL}/rag/query`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question }),
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error("Failed to get RAG answer:", error);
-        return { answer: "Sorry, I encountered an error trying to answer your question." };
-    }
-};
-
-/**
  * Sends a student's profile to the backend for an AI-powered assessment.
- * @param {object} profileData - The student's profile information.
- * @returns {Promise<object>} - A promise that resolves to the assessment object { readinessScore, recommendations }.
  */
 export const getProfileAssessment = async (profileData) => {
     try {
@@ -84,5 +56,42 @@ export const getProfileAssessment = async (profileData) => {
     } catch (error) {
         console.error("Failed to get profile assessment:", error);
         return { assessmentText: "Could not generate recommendations due to an error." };
+    }
+};
+
+
+/**
+ * Calculate admission probabilities for multiple colleges
+ */
+export const calculateProbabilities = async (studentProfile, collegeIds) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/probability/calculate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentProfile, collegeIds }),
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error("Failed to calculate probabilities:", error);
+        return { results: [] };
+    }
+};
+
+/**
+ * Calculate what-if scenario probabilities
+ */
+export const calculateWhatIfScenarios = async (baseProfile, scenarios, collegeId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/probability/whatif`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ baseProfile, scenarios, collegeId }),
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error("Failed to calculate what-if scenarios:", error);
+        return { results: [] };
     }
 };
