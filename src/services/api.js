@@ -22,15 +22,40 @@ export const searchInstitutions = async (searchConfig) => {
 };
 
 /**
- * matching colleges to studentprofile
+ * Gets top matching colleges for a student profile
  */
-export const getTopMatches = async (profile) =>
-  axios.post('/api/rag/top-matches', profile).then(res => res.data);
+export const getTopMatches = async (profile) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rag/top-matches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to get top matches:", error);
+    return { data: [] };
+  }
+};
+
 /**
- * matching scholarships to studentprofile
+ * Gets scholarship summary for a student profile
  */
-export const getScholarshipSummary = async (profile) =>
-  axios.post('/api/rag/scholarships', profile).then(res => res.data);
+export const getScholarshipSummary = async (profile) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rag/scholarships`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to get scholarship summary:", error);
+    return { data: [] };
+  }
+};
 
 /**
  * Fetches the complete, merged profile for a single institution by its ID.
@@ -55,7 +80,7 @@ export const getInstitutionDetails = async (unitId) => {
  */
 export const getProfileAssessment = async (profileData) => {
     try {
-        const response = await fetch(`/api/profile/assess`, {
+        const response = await fetch(`${API_BASE_URL}/profile/assess`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(profileData),
@@ -69,7 +94,6 @@ export const getProfileAssessment = async (profileData) => {
         return { assessmentText: "Could not generate recommendations due to an error." };
     }
 };
-
 
 /**
  * Calculate admission probabilities for multiple colleges
