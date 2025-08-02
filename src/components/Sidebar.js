@@ -7,6 +7,7 @@ const Sidebar = ({ activeView, setView }) => {
     const navItems = [
         { name: 'Dashboard', view: 'dashboard', icon: '🏠' },
         { name: 'Student Profile', view: 'studentProfile', icon: '👤' },
+        { name: 'Scholarships', view: 'scholarships', icon: '🎓' },
         { name: 'StudentVue', view: 'studentVue', icon: '🔗' },
         { name: 'Compare Colleges', view: 'compare', icon: '📊' },
     ];

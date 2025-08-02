@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { searchInstitutions, calculateProbabilities, sendRagQuery } from '../services/api';
+import { searchInstitutions, calculateProbabilities, sendRagQuery, getScholarshipStats, getUpcomingDeadlines } from '../services/api';
 
 const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -10,6 +10,8 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
     const [conversation, setConversation] = useState([]);
     const [currentQuestion, setCurrentQuestion] = useState('');
     const [loadingRag, setLoadingRag] = useState(false);
+    const [scholarshipStats, setScholarshipStats] = useState({});
+    const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
     const chatContainerRef = useRef(null);
 
     useEffect(() => {
@@ -17,6 +19,26 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
     }, [conversation]);
+
+    // Load scholarship data
+    useEffect(() => {
+        const loadScholarshipData = async () => {
+            try {
+                const [statsResult, deadlinesResult] = await Promise.all([
+                    getScholarshipStats(studentProfile),
+                    getUpcomingDeadlines(30)
+                ]);
+                setScholarshipStats(statsResult.stats || {});
+                setUpcomingDeadlines(deadlinesResult.upcoming_deadlines || []);
+            } catch (error) {
+                console.error('Error loading scholarship data:', error);
+            }
+        };
+
+        if (studentProfile) {
+            loadScholarshipData();
+        }
+    }, [studentProfile]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -53,7 +75,7 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
         setLoadingRag(true);
 
         try {
-            const data = await sendRagQuery(currentQuestion, newConversation.slice(0, -1));
+            const data = await sendRagQuery(currentQuestion);
             
             if (data.answer) {
                 setConversation(prev => [...prev, { role: 'assistant', content: data.answer }]);
@@ -65,7 +87,35 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
             console.error("Failed to get RAG answer:", error);
             setConversation(prev => [...prev, { 
                 role: 'assistant', 
-                content: 'Sorry, I encountered an error. Please try again.' 
+                content: 'I\'m here to help with your college and scholarship questions! Try asking about scholarships, application deadlines, essay requirements, or finding the right college for you.' 
+            }]);
+        } finally {
+            setLoadingRag(false);
+        }
+    };
+
+    const handleQuickQuestion = async (question) => {
+        setCurrentQuestion(question);
+        
+        const newConversation = [...conversation, { role: 'user', content: question }];
+        setConversation(newConversation);
+        setCurrentQuestion('');
+        setLoadingRag(true);
+
+        try {
+            const data = await sendRagQuery(question);
+            
+            if (data.answer) {
+                setConversation(prev => [...prev, { role: 'assistant', content: data.answer }]);
+            } else {
+                throw new Error('No answer received from RAG service');
+            }
+
+        } catch (error) {
+            console.error("Failed to get RAG answer:", error);
+            setConversation(prev => [...prev, { 
+                role: 'assistant', 
+                content: 'I\'m here to help with your college and scholarship questions! Try asking about scholarships, application deadlines, essay requirements, or finding the right college for you.' 
             }]);
         } finally {
             setLoadingRag(false);
@@ -99,8 +149,8 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
             <div className="bg-blue-600 text-white p-6 rounded-xl">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold mb-2">Welcome back, Alex Student 👋</h1>
-                        <p className="text-blue-100">You've completed 75% of your scholarship goals this month. Keep it up and maximize your opportunities.</p>
+                        <h1 className="text-2xl font-bold mb-2">Welcome to Scholargy! 🚀</h1>
+                        <p className="text-blue-100">Your gateway to discovering scholarships, college opportunities, and academic success. Let's find your perfect path!</p>
                     </div>
                     <div className="text-4xl">🎓</div>
                 </div>
@@ -187,23 +237,41 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
 
                 {/* Quick Action Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                    <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200">
+                    <button 
+                        onClick={() => handleQuickQuestion("What scholarships are available for my academic level and interests?")}
+                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
                         Ask about scholarships, deadlines, or college requirements...
                     </button>
-                    <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200">
+                    <button 
+                        onClick={() => handleQuickQuestion("Find STEM scholarships for students with my background")}
+                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
                         Find STEM scholarships
                     </button>
-                    <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200">
+                    <button 
+                        onClick={() => handleQuickQuestion("What are the upcoming application deadlines I should know about?")}
+                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
                         Application deadlines
                     </button>
-                    <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200">
+                    <button 
+                        onClick={() => handleQuickQuestion("What are the essay requirements for college applications?")}
+                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
                         Essay requirements
                     </button>
-                    <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200">
+                    <button 
+                        onClick={() => handleQuickQuestion("What merit aid opportunities are available for students like me?")}
+                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    >
                         Merit aid opportunities
                     </button>
-                    <button className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm hover:bg-purple-700">
-                        Ask
+                    <button 
+                        onClick={() => setCurrentQuestion("")}
+                        className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm hover:bg-purple-700 transition-colors cursor-pointer"
+                    >
+                        Clear
                     </button>
                 </div>
 
@@ -216,7 +284,18 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
                     >
                         {conversation.length === 0 ? (
                             <div className="text-center text-gray-500 py-8">
-                                <p className="text-sm">Start a conversation with Scholargy AI</p>
+                                <div className="mb-4">
+                                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <span className="text-blue-600 text-xl">🎓</span>
+                                    </div>
+                                </div>
+                                <p className="text-sm font-medium mb-2">Welcome to Scholargy AI!</p>
+                                <p className="text-xs text-gray-400 mb-4">I'm here to help with your college and scholarship questions.</p>
+                                <div className="text-xs text-gray-400 space-y-1">
+                                    <p>• Ask about scholarships and deadlines</p>
+                                    <p>• Get college application advice</p>
+                                    <p>• Find financial aid opportunities</p>
+                                </div>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -233,7 +312,8 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
                                 ))}
                                 {loadingRag && (
                                     <div className="flex justify-start">
-                                        <div className="bg-white border border-gray-200 text-gray-800 px-3 py-2 rounded-lg text-sm">
+                                        <div className="bg-white border border-gray-200 text-gray-800 px-3 py-2 rounded-lg text-sm flex items-center space-x-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                                             <p>Thinking...</p>
                                         </div>
                                     </div>
@@ -283,38 +363,104 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
                 </div>
             </div>
 
-            {/* Scholarship Progress Section */}
+            {/* Enhanced Scholarship Progress Section */}
             <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Scholarship Progress</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">Scholarship Progress</h2>
+                    <button 
+                        onClick={() => setView('scholarships')}
+                        className="text-blue-600 text-sm hover:underline font-semibold"
+                    >
+                        View All Scholarships →
+                    </button>
+                </div>
+                
+                {/* Real-time Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center">
                         <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-green-100 flex items-center justify-center">
-                            <span className="text-green-600 font-bold">85%</span>
+                            <span className="text-green-600 font-bold text-lg">
+                                ${scholarshipStats.total_value ? (scholarshipStats.total_value / 1000000).toFixed(1) + 'M' : '0'}
+                            </span>
                         </div>
-                        <p className="text-sm font-semibold text-gray-800">Merit Scholarships</p>
-                        <p className="text-xs text-gray-500">Applications</p>
+                        <p className="text-sm font-semibold text-gray-800">Total Value</p>
+                        <p className="text-xs text-gray-500">Available</p>
                     </div>
                     <div className="text-center">
                         <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-bold">72%</span>
+                            <span className="text-blue-600 font-bold text-lg">
+                                {scholarshipStats.total_scholarships || 0}
+                            </span>
                         </div>
-                        <p className="text-sm font-semibold text-gray-800">STEM Awards</p>
-                        <p className="text-xs text-gray-500">Essays</p>
+                        <p className="text-sm font-semibold text-gray-800">Scholarships</p>
+                        <p className="text-xs text-gray-500">Available</p>
                     </div>
                     <div className="text-center">
-                        <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-yellow-100 flex items-center justify-center">
-                            <span className="text-yellow-600 font-bold">45%</span>
+                        <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-red-100 flex items-center justify-center">
+                            <span className="text-red-600 font-bold text-lg">
+                                {upcomingDeadlines.filter(d => d.urgency_level === 'critical').length}
+                            </span>
                         </div>
-                        <p className="text-sm font-semibold text-gray-800">Local Scholarships</p>
-                        <p className="text-xs text-gray-500">Requirements</p>
+                        <p className="text-sm font-semibold text-gray-800">Urgent</p>
+                        <p className="text-xs text-gray-500">Deadlines</p>
                     </div>
                     <div className="text-center">
                         <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-purple-100 flex items-center justify-center">
-                            <span className="text-purple-600 font-bold">90%</span>
+                            <span className="text-purple-600 font-bold text-lg">
+                                {scholarshipStats.avg_amount ? Math.round(scholarshipStats.avg_amount) : 0}
+                            </span>
                         </div>
-                        <p className="text-sm font-semibold text-gray-800">Need-Based Aid</p>
-                        <p className="text-xs text-gray-500">Complete</p>
+                        <p className="text-sm font-semibold text-gray-800">Avg Award</p>
+                        <p className="text-xs text-gray-500">Amount</p>
                     </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button 
+                        onClick={() => setView('scholarships')}
+                        className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm">🎯</span>
+                            </div>
+                            <div className="text-left">
+                                <p className="font-semibold">Smart Matching</p>
+                                <p className="text-xs text-blue-100">Find your perfect matches</p>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button 
+                        onClick={() => setView('scholarships')}
+                        className="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm">⏰</span>
+                            </div>
+                            <div className="text-left">
+                                <p className="font-semibold">Deadlines</p>
+                                <p className="text-xs text-green-100">Urgent applications</p>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button 
+                        onClick={() => setView('scholarships')}
+                        className="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm">📊</span>
+                            </div>
+                            <div className="text-left">
+                                <p className="font-semibold">Categories</p>
+                                <p className="text-xs text-purple-100">Browse by type</p>
+                            </div>
+                        </div>
+                    </button>
                 </div>
             </div>
 

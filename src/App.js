@@ -6,6 +6,7 @@ import ProfilePage from './pages/ProfilePage';
 import ReportPage from './pages/ReportPage';
 import StudentProfilePage from './pages/StudentProfilePage';
 import StudentVuePage from './pages/StudentVuePage';
+import ScholarshipPage from './pages/ScholarshipPage';
 import { AuthContext } from './contexts/AuthContext';
 
 function App() {
@@ -52,6 +53,8 @@ function App() {
         return <StudentProfilePage studentProfile={studentProfile} setStudentProfile={setStudentProfile} />;
       case 'studentVue':
         return <StudentVuePage />;
+      case 'scholarships':
+        return <ScholarshipPage studentProfile={studentProfile} setView={setView} />;
       case 'dashboard':
       default:
         return <DashboardPage onSelectCollege={handleSelectCollege} setView={setView} studentProfile={studentProfile} />;
