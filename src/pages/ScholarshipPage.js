@@ -57,6 +57,11 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
     }
   }, [studentProfile]);
 
+  // Load scholarship data on component mount
+  useEffect(() => {
+    loadScholarshipData();
+  }, [loadScholarshipData]);
+
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
     

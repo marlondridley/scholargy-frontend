@@ -468,7 +468,12 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
             <div className="bg-white p-6 rounded-xl shadow-sm border">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-gray-800">College Search</h2>
-                    <a href="#" className="text-blue-600 text-sm hover:underline">View All</a>
+                    <button 
+                        onClick={() => setView('institutions')}
+                        className="text-blue-600 text-sm hover:underline bg-transparent border-none cursor-pointer"
+                    >
+                        View All
+                    </button>
                 </div>
                 <form onSubmit={handleSearch} className="flex mb-6">
                     <input
@@ -526,7 +531,12 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
             <div className="bg-white p-6 rounded-xl shadow-sm border">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-gray-800">AI Assistant Updates</h2>
-                    <a href="#" className="text-blue-600 text-sm hover:underline">View All</a>
+                    <button 
+                        onClick={() => setView('rag')}
+                        className="text-blue-600 text-sm hover:underline bg-transparent border-none cursor-pointer"
+                    >
+                        View All
+                    </button>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                     <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
