@@ -89,7 +89,6 @@ Admission probability calculations and what-if scenarios.
 
 **Functions:**
 - `calculateProbabilities(studentProfile, collegeIds)` - Calculate admission chances
-- `calculateWhatIfScenarios(baseProfile, scenarios, collegeId)` - What-if analysis
 - `getCollegeProbabilityStats(collegeId)` - Get college statistics
 - `compareCollegeProbabilities(studentProfile, collegeIds)` - Compare colleges
 - `getProbabilityTrends(collegeId, years)` - Historical trends

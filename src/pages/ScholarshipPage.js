@@ -27,11 +27,7 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
   });
   const [activeTab, setActiveTab] = useState('recommendations');
 
-  useEffect(() => {
-    loadScholarshipData();
-  }, [studentProfile]);
-
-  const loadScholarshipData = async () => {
+  const loadScholarshipData = useCallback(async () => {
     setLoading(true);
     try {
       // Load all data in parallel
@@ -426,20 +422,6 @@ const ScholarshipCard = ({ scholarship }) => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-  };
-
-  const getUrgencyColor = (urgency) => {
-    switch (urgency) {
-      case 'critical': return 'text-red-600 bg-red-100';
-      case 'urgent': return 'text-orange-600 bg-orange-100';
-      default: return 'text-green-600 bg-green-100';
-    }
-  };
-
-  const getFitScoreColor = (score) => {
-    if (score >= 80) return 'text-green-600 bg-green-100';
-    if (score >= 60) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
   };
 
   return (

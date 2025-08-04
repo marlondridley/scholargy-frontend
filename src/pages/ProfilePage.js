@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getInstitutionDetails } from '../services/api';
-import WhatIfScenarios from '../components/WhatIfScenarios';
 
 const DataCard = ({ title, children, icon }) => (
     <div className="bg-white p-6 rounded-xl shadow-sm border">
@@ -68,13 +67,7 @@ const ProfilePage = ({ collegeId, onBack, onGenerateReport, studentProfile }) =>
                         <ScoreBar min={admissions.sat_scores?.math_25th} max={admissions.sat_scores?.math_75th} label="SAT Math" range={800} />
                         <ScoreBar min={admissions.act_scores?.composite_25th} max={admissions.act_scores?.composite_75th} label="ACT Composite" range={36} />
                     </DataCard>
-                    {studentProfile && (
-                        <WhatIfScenarios 
-                            studentProfile={studentProfile}
-                            collegeId={collegeId}
-                            collegeName={general_info.name}
-                        />
-                    )}
+
                      {derivedData && (
                         <DataCard title="Finance & Staffing" icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}>
                             <p><strong>Total Revenue:</strong> ${derivedData.total_revenue?.toLocaleString() || 'N/A'}</p>

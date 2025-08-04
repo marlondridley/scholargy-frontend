@@ -113,23 +113,7 @@ export const calculateProbabilities = async (studentProfile, collegeIds) => {
     }
 };
 
-/**
- * Calculate what-if scenario probabilities
- */
-export const calculateWhatIfScenarios = async (baseProfile, scenarios, collegeId) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/probability/whatif`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ baseProfile, scenarios, collegeId }),
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error("Failed to calculate what-if scenarios:", error);
-        return { results: [] };
-    }
-};
+
 
 export const sendRagQuery = async (query) => {
   try {

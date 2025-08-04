@@ -154,18 +154,7 @@ const StudentProfilePage = () => {
                             )}
                         </div>
                     )}
-                     <div className="bg-white p-6 rounded-xl shadow-sm border">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">What-If Scenarios</h2>
-                        <p className="text-sm text-gray-500 mb-4">See how changes could impact your score.</p>
-                        <div className="space-y-4">
-                            <InputField label="Adjust GPA" type="number" name="whatIfGpa" placeholder="e.g., 3.9" />
-                            <InputField label="Adjust SAT Score" type="number" name="whatIfSat" placeholder="e.g., 1500" />
-                        </div>
-                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                            <button onClick={() => alert('Counselor chat feature is for premium users.')} className="flex-1 bg-purple-100 text-purple-700 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-purple-200">Get Help from Counselor</button>
-                            <button onClick={() => alert('This would book a call.')} className="flex-1 bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg text-sm hover:bg-gray-800">Schedule a Strategy Session</button>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>
