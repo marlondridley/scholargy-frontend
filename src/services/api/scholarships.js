@@ -1,6 +1,6 @@
 // frontend/src/services/api/scholarships.js - Frontend API client for scholarships
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api');
+const API_BASE_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8080/api' : '/api');
 
 /**
  * Search for scholarships based on student profile

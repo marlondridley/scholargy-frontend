@@ -21,11 +21,12 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [filters, setFilters] = useState({
     minAmount: '',
-    maxAmount: '',
+    state: '',
     deadlineFilter: '',
     minScore: 30
   });
   const [activeTab, setActiveTab] = useState('recommendations');
+  const [selectedScholarship, setSelectedScholarship] = useState(null);
 
   const loadScholarshipData = useCallback(async () => {
     setLoading(true);
@@ -55,114 +56,20 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
         deadlinesResult
       });
 
-      // Use fallback data if API returns empty results
-      const fallbackScholarships = [
-        {
-          id: '1',
-          title: 'STEM Excellence Scholarship',
-          provider: 'National Science Foundation',
-          amount: 5000,
-          deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          fit_score: 85,
-          urgency_level: 'critical',
-          categories: ['STEM', 'Academic'],
-          description: 'Scholarship for outstanding STEM students with strong academic performance.'
-        },
-        {
-          id: '2',
-          title: 'Community Service Award',
-          provider: 'Local Community Foundation',
-          amount: 2500,
-          deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          fit_score: 75,
-          urgency_level: 'high',
-          categories: ['Community Service', 'Leadership'],
-          description: 'Award for students demonstrating exceptional community service and leadership.'
-        },
-        {
-          id: '3',
-          title: 'Merit-Based Scholarship',
-          provider: 'University Excellence Fund',
-          amount: 10000,
-          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          fit_score: 90,
-          urgency_level: 'medium',
-          categories: ['Merit', 'Academic'],
-          description: 'High-value merit scholarship for academically outstanding students.'
-        }
-      ];
-
-      const fallbackStats = {
-        total_value: 17500,
-        total_scholarships: 3,
-        high_match: 2,
-        deadlines_soon: 1,
-        avg_amount: 5833
-      };
-
-      setScholarships(searchResult.scholarships?.length > 0 ? searchResult.scholarships : fallbackScholarships);
-      setRecommendations(recommendationsResult.recommendations?.length > 0 ? recommendationsResult.recommendations : fallbackScholarships.slice(0, 2));
-      setStats(statsResult.stats?.total_scholarships > 0 ? statsResult.stats : fallbackStats);
-      setCategories(categoriesResult.categories?.length > 0 ? categoriesResult.categories : [
-        { id: 'stem', name: 'STEM', count: 1 },
-        { id: 'community', name: 'Community Service', count: 1 },
-        { id: 'merit', name: 'Merit', count: 1 }
-      ]);
-      setUpcomingDeadlines(deadlinesResult.upcoming_deadlines?.length > 0 ? deadlinesResult.upcoming_deadlines : fallbackScholarships.filter(s => s.urgency_level === 'critical'));
+      // Use real API data
+      setScholarships(searchResult.scholarships || []);
+      setRecommendations(recommendationsResult.recommendations || []);
+      setStats(statsResult.stats || {});
+      setCategories(categoriesResult.categories || []);
+      setUpcomingDeadlines(deadlinesResult.upcoming_deadlines || []);
     } catch (error) {
       console.error('Error loading scholarship data:', error);
-      // Set fallback data if API fails
-      const fallbackScholarships = [
-        {
-          id: '1',
-          title: 'STEM Excellence Scholarship',
-          provider: 'National Science Foundation',
-          amount: 5000,
-          deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          fit_score: 85,
-          urgency_level: 'critical',
-          categories: ['STEM', 'Academic'],
-          description: 'Scholarship for outstanding STEM students with strong academic performance.'
-        },
-        {
-          id: '2',
-          title: 'Community Service Award',
-          provider: 'Local Community Foundation',
-          amount: 2500,
-          deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          fit_score: 75,
-          urgency_level: 'high',
-          categories: ['Community Service', 'Leadership'],
-          description: 'Award for students demonstrating exceptional community service and leadership.'
-        },
-        {
-          id: '3',
-          title: 'Merit-Based Scholarship',
-          provider: 'University Excellence Fund',
-          amount: 10000,
-          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          fit_score: 90,
-          urgency_level: 'medium',
-          categories: ['Merit', 'Academic'],
-          description: 'High-value merit scholarship for academically outstanding students.'
-        }
-      ];
-
-      setScholarships(fallbackScholarships);
-      setRecommendations(fallbackScholarships.slice(0, 2));
-      setStats({
-        total_value: 17500,
-        total_scholarships: 3,
-        high_match: 2,
-        deadlines_soon: 1,
-        avg_amount: 5833
-      });
-      setCategories([
-        { id: 'stem', name: 'STEM', count: 1 },
-        { id: 'community', name: 'Community Service', count: 1 },
-        { id: 'merit', name: 'Merit', count: 1 }
-      ]);
-      setUpcomingDeadlines(fallbackScholarships.filter(s => s.urgency_level === 'critical'));
+      // Set empty data if API fails
+      setScholarships([]);
+      setRecommendations([]);
+      setStats({});
+      setCategories([]);
+      setUpcomingDeadlines([]);
     } finally {
       setLoading(false);
     }
@@ -373,57 +280,107 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
       {activeTab === 'advanced' && (
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <h3 className="text-lg font-semibold mb-4">Advanced Filters</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Minimum Amount
-              </label>
-              <input
-                type="number"
-                value={filters.minAmount}
-                onChange={(e) => setFilters({...filters, minAmount: e.target.value})}
-                placeholder="e.g., 1000"
-                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Maximum Amount
-              </label>
-              <input
-                type="number"
-                value={filters.maxAmount}
-                onChange={(e) => setFilters({...filters, maxAmount: e.target.value})}
-                placeholder="e.g., 50000"
-                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Deadline Within (days)
-              </label>
-              <input
-                type="number"
-                value={filters.deadlineFilter}
-                onChange={(e) => setFilters({...filters, deadlineFilter: e.target.value})}
-                placeholder="e.g., 30"
-                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Minimum Match Score
-              </label>
-              <input
-                type="number"
-                value={filters.minScore}
-                onChange={(e) => setFilters({...filters, minScore: e.target.value})}
-                min="0"
-                max="100"
-                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-1">
+                 Minimum Amount
+               </label>
+               <input
+                 type="number"
+                 value={filters.minAmount}
+                 onChange={(e) => setFilters({...filters, minAmount: e.target.value})}
+                 placeholder="e.g., 1000"
+                 className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               />
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-1">
+                 State
+               </label>
+               <select
+                 value={filters.state}
+                 onChange={(e) => setFilters({...filters, state: e.target.value})}
+                 className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               >
+                 <option value="">All States</option>
+                 <option value="AL">Alabama</option>
+                 <option value="AK">Alaska</option>
+                 <option value="AZ">Arizona</option>
+                 <option value="AR">Arkansas</option>
+                 <option value="CA">California</option>
+                 <option value="CO">Colorado</option>
+                 <option value="CT">Connecticut</option>
+                 <option value="DE">Delaware</option>
+                 <option value="FL">Florida</option>
+                 <option value="GA">Georgia</option>
+                 <option value="HI">Hawaii</option>
+                 <option value="ID">Idaho</option>
+                 <option value="IL">Illinois</option>
+                 <option value="IN">Indiana</option>
+                 <option value="IA">Iowa</option>
+                 <option value="KS">Kansas</option>
+                 <option value="KY">Kentucky</option>
+                 <option value="LA">Louisiana</option>
+                 <option value="ME">Maine</option>
+                 <option value="MD">Maryland</option>
+                 <option value="MA">Massachusetts</option>
+                 <option value="MI">Michigan</option>
+                 <option value="MN">Minnesota</option>
+                 <option value="MS">Mississippi</option>
+                 <option value="MO">Missouri</option>
+                 <option value="MT">Montana</option>
+                 <option value="NE">Nebraska</option>
+                 <option value="NV">Nevada</option>
+                 <option value="NH">New Hampshire</option>
+                 <option value="NJ">New Jersey</option>
+                 <option value="NM">New Mexico</option>
+                 <option value="NY">New York</option>
+                 <option value="NC">North Carolina</option>
+                 <option value="ND">North Dakota</option>
+                 <option value="OH">Ohio</option>
+                 <option value="OK">Oklahoma</option>
+                 <option value="OR">Oregon</option>
+                 <option value="PA">Pennsylvania</option>
+                 <option value="RI">Rhode Island</option>
+                 <option value="SC">South Carolina</option>
+                 <option value="SD">South Dakota</option>
+                 <option value="TN">Tennessee</option>
+                 <option value="TX">Texas</option>
+                 <option value="UT">Utah</option>
+                 <option value="VT">Vermont</option>
+                 <option value="VA">Virginia</option>
+                 <option value="WA">Washington</option>
+                 <option value="WV">West Virginia</option>
+                 <option value="WI">Wisconsin</option>
+                 <option value="WY">Wyoming</option>
+               </select>
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-1">
+                 Deadline Within (days)
+               </label>
+               <input
+                 type="number"
+                 value={filters.deadlineFilter}
+                 onChange={(e) => setFilters({...filters, deadlineFilter: e.target.value})}
+                 placeholder="e.g., 30"
+                 className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               />
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-1">
+                 Minimum Match Score
+               </label>
+               <input
+                 type="number"
+                 value={filters.minScore}
+                 onChange={(e) => setFilters({...filters, minScore: e.target.value})}
+                 min="0"
+                 max="100"
+                 className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               />
+             </div>
+           </div>
           <div className="mt-4 flex gap-2">
             <button
               onClick={handleAdvancedMatch}
@@ -431,10 +388,10 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
             >
               Apply Filters
             </button>
-            <button
-              onClick={() => setFilters({minAmount: '', maxAmount: '', deadlineFilter: '', minScore: 30})}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
-            >
+                         <button
+               onClick={() => setFilters({minAmount: '', state: '', deadlineFilter: '', minScore: 30})}
+               className="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+             >
               Clear Filters
             </button>
           </div>
@@ -535,6 +492,177 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
           </>
         )}
       </div>
+
+      {/* Scholarship Detail Modal */}
+      {selectedScholarship && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Scholarship Details</h2>
+                <button
+                  onClick={() => setSelectedScholarship(null)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Header Section */}
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      {selectedScholarship.title}
+                    </h3>
+                    <p className="text-lg text-gray-600 mb-4">
+                      {selectedScholarship.description}
+                    </p>
+                  </div>
+                  <div className="flex space-x-2">
+                    {selectedScholarship.fit_score && (
+                      <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getFitScoreColor(selectedScholarship.fit_score)}`}>
+                        {selectedScholarship.fit_score}% Match
+                      </span>
+                    )}
+                    {selectedScholarship.urgency_level && (
+                      <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getUrgencyColor(selectedScholarship.urgency_level)}`}>
+                        {selectedScholarship.urgency_level}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Key Information */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {formatCurrency(selectedScholarship.amount)}
+                    </div>
+                    <div className="text-sm text-gray-500">Award Amount</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-gray-900">
+                      {selectedScholarship.provider}
+                    </div>
+                    <div className="text-sm text-gray-500">Provider</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-gray-900">
+                      {selectedScholarship.deadline ? new Date(selectedScholarship.deadline).toLocaleDateString() : 'No deadline'}
+                    </div>
+                    <div className="text-sm text-gray-500">Deadline</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Information */}
+              <div className="space-y-6">
+                {/* Requirements */}
+                {selectedScholarship.requirements && selectedScholarship.requirements.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h4>
+                    <ul className="list-disc list-inside space-y-1 text-gray-700">
+                      {selectedScholarship.requirements.map((req, index) => (
+                        <li key={index}>{req}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Categories */}
+                {selectedScholarship.categories && selectedScholarship.categories.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Categories</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedScholarship.categories.map((category, index) => (
+                        <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                          {category}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fields of Study */}
+                {selectedScholarship.fields_of_study && selectedScholarship.fields_of_study.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Fields of Study</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedScholarship.fields_of_study.map((field, index) => (
+                        <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                          {field}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Academic Levels */}
+                {selectedScholarship.academic_levels && selectedScholarship.academic_levels.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Academic Levels</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedScholarship.academic_levels.map((level, index) => (
+                        <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                          {level}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Demographics */}
+                {selectedScholarship.demographics && Object.keys(selectedScholarship.demographics).length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Demographics</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(selectedScholarship.demographics).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-medium">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Raw Data (if available) */}
+                {selectedScholarship.raw_data && Object.keys(selectedScholarship.raw_data).length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Additional Information</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {JSON.stringify(selectedScholarship.raw_data, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => selectedScholarship.application_url && selectedScholarship.application_url !== '#' ? window.open(selectedScholarship.application_url, '_blank') : alert('Application link not available')}
+                    className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                  >
+                    Apply Now
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+                  >
+                    Print Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -630,14 +758,20 @@ const ScholarshipCard = ({ scholarship }) => {
         </div>
       )}
 
-      <div className="flex space-x-2">
-        <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
-          View Details
-        </button>
-        <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
-          Apply Now
-        </button>
-      </div>
+             <div className="flex space-x-2">
+         <button 
+           onClick={() => setSelectedScholarship(scholarship)}
+           className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+         >
+           View Details
+         </button>
+         <button 
+           onClick={() => scholarship.application_url && scholarship.application_url !== '#' ? window.open(scholarship.application_url, '_blank') : alert('Application link not available')}
+           className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
+         >
+           Apply Now
+         </button>
+       </div>
     </div>
   );
 };
