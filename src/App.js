@@ -7,6 +7,7 @@ import ReportPage from './pages/ReportPage';
 import StudentProfilePage from './pages/StudentProfilePage';
 import StudentVuePage from './pages/StudentVuePage';
 import ScholarshipPage from './pages/ScholarshipPage';
+import CompareCollegesPage from './pages/CompareCollegesPage';
 import { AuthContext } from './contexts/AuthContext';
 
 function App() {
@@ -55,6 +56,8 @@ function App() {
         return <StudentVuePage />;
       case 'scholarships':
         return <ScholarshipPage studentProfile={studentProfile} setView={setView} />;
+      case 'compare':
+        return <CompareCollegesPage setView={setView} studentProfile={studentProfile} />;
       case 'dashboard':
       default:
         return <DashboardPage onSelectCollege={handleSelectCollege} setView={setView} studentProfile={studentProfile} />;

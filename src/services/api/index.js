@@ -10,4 +10,7 @@ export * from './institutions.js';
 export * from './profile.js';
 
 // Export all probability-related functions
-export * from './probability.js'; 
+export * from './probability.js';
+
+// Export all scholarship-related functions
+export * from './scholarships.js'; 

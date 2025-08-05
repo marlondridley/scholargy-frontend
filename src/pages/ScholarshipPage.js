@@ -126,11 +126,22 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-xl">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Scholarship Hub</h1>
-            <p className="text-blue-100">Discover and apply to scholarships that match your profile</p>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setView('dashboard')}
+              className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors"
+            >
+              <span>←</span>
+              <span>Back to Dashboard</span>
+            </button>
           </div>
-          <div className="text-4xl">🎓</div>
+          <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Scholarship Hub</h1>
+              <p className="text-blue-100">Discover and apply to scholarships that match your profile</p>
+            </div>
+            <div className="text-4xl">🎓</div>
+          </div>
         </div>
       </div>
 

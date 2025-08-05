@@ -157,7 +157,7 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
             </div>
 
             {/* Navigation Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
                 <div 
                     onClick={() => setView('studentProfile')}
                     className="bg-white p-4 rounded-xl shadow-sm border hover:shadow-lg cursor-pointer transition-all"
@@ -199,18 +199,6 @@ const DashboardPage = ({ onSelectCollege, setView, studentProfile }) => {
                         <div>
                             <h3 className="font-semibold text-gray-900">Compare Colleges</h3>
                             <p className="text-xs text-gray-500">Find your perfect match</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl shadow-sm border hover:shadow-lg cursor-pointer transition-all">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <span className="text-xl">📚</span>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-gray-900">Schedule a Tutor</h3>
-                            <p className="text-xs text-gray-500">Get personalized help</p>
                         </div>
                     </div>
                 </div>
