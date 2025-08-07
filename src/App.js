@@ -1,39 +1,53 @@
-import React, { useState, useMemo, useEffect } from 'react';
+// frontend/src/App.js
+import React, { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import ProfilePage from './pages/ProfilePage';
-import ReportPage from './pages/ReportPage';
 import StudentProfilePage from './pages/StudentProfilePage';
-import StudentVuePage from './pages/StudentVuePage';
 import ScholarshipPage from './pages/ScholarshipPage';
+import MatchingPage from './pages/MatchingPage';
+import CareerForecasterPage from './pages/CareerForecasterPage';
+import AuthCallback from './pages/AuthCallback';
+import ReportPage from './pages/ReportPage';
+import StudentVuePage from './pages/StudentVuePage';
 import CompareCollegesPage from './pages/CompareCollegesPage';
-import { AuthContext } from './contexts/AuthContext';
+import ProfilePage from './pages/ProfilePage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
-  const [user, setUser] = useState(null);
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <Main />
+      </AuthProvider>
+    </ErrorBoundary>
+  );
+}
+
+const Main = () => {
+  const { user, profile, setProfile, isProfileComplete, loading } = useAuth();
   const [view, setView] = useState('dashboard');
   const [selectedCollegeId, setSelectedCollegeId] = useState(null);
-  
-  // Centralized state for the student's profile
-  const [studentProfile, setStudentProfile] = useState(null);
 
-  // Load saved profile from localStorage on initial app load
   useEffect(() => {
-      const savedProfile = localStorage.getItem('studentProfile');
-      if (savedProfile) {
-          setStudentProfile(JSON.parse(savedProfile));
-      }
+    // Handle OAuth callback route
+    if (window.location.pathname === '/auth/callback') {
+      setView('authCallback');
+      return;
+    }
+    
+    // Handle other direct URL routes
+    const path = window.location.pathname;
+    if (path === '/dashboard') setView('dashboard');
+    else if (path === '/scholarships') setView('scholarships');
+    else if (path === '/matching') setView('matching');
+    else if (path === '/forecaster') setView('forecaster');
+    else if (path === '/compare') setView('compare');
+    else if (path === '/studentvue') setView('studentVue');
+    else if (path === '/profile') setView('profile');
+    else if (path === '/report') setView('report');
   }, []);
-
-  const authContextValue = useMemo(() => ({
-    user,
-    login: (username) => setUser({ name: username }),
-    logout: () => {
-      setUser(null);
-      setView('dashboard');
-    },
-  }), [user]);
 
   const handleSelectCollege = (unitId) => {
     setSelectedCollegeId(unitId);
@@ -44,41 +58,42 @@ function App() {
     setView('report');
   };
 
-  const renderView = () => {
-    switch (view) {
-      case 'profile':
-        return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} studentProfile={studentProfile} />;
-      case 'report':
-        return <ReportPage collegeId={selectedCollegeId} onBack={() => setView('profile')} studentProfile={studentProfile} />;
-      case 'studentProfile':
-        return <StudentProfilePage studentProfile={studentProfile} setStudentProfile={setStudentProfile} />;
-      case 'studentVue':
-        return <StudentVuePage />;
-      case 'scholarships':
-        return <ScholarshipPage studentProfile={studentProfile} setView={setView} />;
-      case 'compare':
-        return <CompareCollegesPage setView={setView} studentProfile={studentProfile} />;
-      case 'dashboard':
-      default:
-        return <DashboardPage onSelectCollege={handleSelectCollege} setView={setView} studentProfile={studentProfile} />;
-    }
-  };
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (!user) {
+    return <LoginPage />;
+  }
+  
+  if (!isProfileComplete && view !== 'studentProfile' && view !== 'authCallback') {
     return (
-        <AuthContext.Provider value={authContextValue}>
-            <LoginPage />
-        </AuthContext.Provider>
+      <Layout activeView="studentProfile" setView={setView}>
+        <StudentProfilePage />
+      </Layout>
     );
   }
 
+  const renderView = () => {
+    switch (view) {
+      case 'authCallback': return <AuthCallback setView={setView} />;
+      case 'studentProfile': return <StudentProfilePage />;
+      case 'scholarships': return <ScholarshipPage studentProfile={profile} setView={setView} />;
+      case 'matching': return <MatchingPage />;
+      case 'forecaster': return <CareerForecasterPage />;
+      case 'compare': return <CompareCollegesPage studentProfile={profile} setView={setView} />;
+      case 'studentVue': return <StudentVuePage />;
+      case 'report': return <ReportPage collegeId={selectedCollegeId} onBack={() => setView('profile')} />;
+      case 'profile': return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} />;
+      default: return <DashboardPage setView={setView} onSelectCollege={handleSelectCollege} studentProfile={profile} />;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={authContextValue}>
-        <Layout activeView={view} setView={setView}>
-            {renderView()}
-        </Layout>
-    </AuthContext.Provider>
+    <Layout activeView={view} setView={setView}>
+      {renderView()}
+    </Layout>
   );
-}
+};
 
 export default App;
