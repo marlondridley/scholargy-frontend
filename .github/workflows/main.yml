@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 env:
-  # CORRECTED: Point to the root directory since your app is not in a subfolder.
+  # Point to the root directory since your app is not in a subfolder.
   APP_LOCATION: "." 
   API_LOCATION: "" # No local API — backend is on ASE
   APP_ARTIFACT_LOCATION: "build" # The default build output folder for Create React App
@@ -32,12 +32,11 @@ jobs:
           node-version: 22 # Match your LTS
 
       - name: Install dependencies
-        run: npm ci
-        # REMOVED: No working directory needed, command runs at the root.
+        # CORRECTED: Use 'npm install' instead of 'npm ci' to resolve package-lock.json conflicts.
+        run: npm install
 
       - name: Build
         run: npm run build
-        # REMOVED: No working directory needed, command runs at the root.
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
