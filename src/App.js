@@ -26,11 +26,8 @@ function App() {
 }
 
 const Main = () => {
-<<<<<<< HEAD
-  const { user, profile, isProfileComplete, loading } = useAuth();
-=======
+  // Use the version that includes setProfile
   const { user, profile, setProfile, isProfileComplete, loading } = useAuth();
->>>>>>> 85efa78bcbe0e71f23f99074dfb452ed01e11b02
   const [view, setView] = useState('dashboard');
   const [selectedCollegeId, setSelectedCollegeId] = useState(null);
 
@@ -66,15 +63,17 @@ const Main = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-<<<<<<< HEAD
-  if (!user && view !== 'authCallback') {
-=======
+  // Allow AuthCallback to run regardless of user state
+  if (view === 'authCallback') {
+    return <AuthCallback setView={setView} />;
+  }
+
+  // If there is no user, show the login page.
   if (!user) {
->>>>>>> 85efa78bcbe0e71f23f99074dfb452ed01e11b02
     return <LoginPage />;
   }
   
-  if (!isProfileComplete && view !== 'studentProfile' && view !== 'authCallback') {
+  if (!isProfileComplete && view !== 'studentProfile') {
     return (
       <Layout activeView="studentProfile" setView={setView}>
         <StudentProfilePage />
@@ -84,9 +83,7 @@ const Main = () => {
 
   const renderView = () => {
     switch (view) {
-<<<<<<< HEAD
-      case 'authCallback': 
-        return <AuthCallback setView={setView} />;
+      // REMOVED: authCallback is now handled above
       case 'studentProfile': 
         return <StudentProfilePage />;
       case 'scholarships': 
@@ -105,18 +102,6 @@ const Main = () => {
         return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} />;
       default: 
         return <DashboardPage setView={setView} onSelectCollege={handleSelectCollege} studentProfile={profile} />;
-=======
-      case 'authCallback': return <AuthCallback setView={setView} />;
-      case 'studentProfile': return <StudentProfilePage />;
-      case 'scholarships': return <ScholarshipPage studentProfile={profile} setView={setView} />;
-      case 'matching': return <MatchingPage />;
-      case 'forecaster': return <CareerForecasterPage />;
-      case 'compare': return <CompareCollegesPage studentProfile={profile} setView={setView} />;
-      case 'studentVue': return <StudentVuePage />;
-      case 'report': return <ReportPage collegeId={selectedCollegeId} onBack={() => setView('profile')} />;
-      case 'profile': return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} />;
-      default: return <DashboardPage setView={setView} onSelectCollege={handleSelectCollege} studentProfile={profile} />;
->>>>>>> 85efa78bcbe0e71f23f99074dfb452ed01e11b02
     }
   };
 
@@ -127,8 +112,4 @@ const Main = () => {
   );
 };
 
-<<<<<<< HEAD
 export default App;
-=======
-export default App;
->>>>>>> 85efa78bcbe0e71f23f99074dfb452ed01e11b02
