@@ -30,8 +30,8 @@ const AuthCallback = ({ setView }) => {
     } else {
       // No user → failed authentication
       setError("Authentication failed. Please try again.");
-      setAuthLoading(false);
     }
+    setAuthLoading(false);
   }, [loading, user, isProfileComplete, setView]);
 
   if (authLoading && !error) {
@@ -85,7 +85,7 @@ const AuthCallback = ({ setView }) => {
     );
   }
 
-  // Success state
+  // Success state - will show briefly before redirect
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8">
@@ -104,7 +104,7 @@ const AuthCallback = ({ setView }) => {
             Authentication Successful!
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Redirecting you to your dashboard...
+            Redirecting you...
           </p>
         </div>
       </div>

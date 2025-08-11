@@ -26,7 +26,6 @@ function App() {
 }
 
 const Main = () => {
-  // Use the version that includes setProfile
   const { user, profile, setProfile, isProfileComplete, loading } = useAuth();
   const [view, setView] = useState('dashboard');
   const [selectedCollegeId, setSelectedCollegeId] = useState(null);
@@ -49,6 +48,13 @@ const Main = () => {
     else if (path === '/profile') setView('profile');
     else if (path === '/report') setView('report');
   }, []);
+
+  // Set the profile in the context when the user object is available
+  useEffect(() => {
+    if (user && user.profile) {
+      setProfile(user.profile);
+    }
+  }, [user, setProfile]);
 
   const handleSelectCollege = (unitId) => {
     setSelectedCollegeId(unitId);
@@ -83,7 +89,6 @@ const Main = () => {
 
   const renderView = () => {
     switch (view) {
-      // REMOVED: authCallback is now handled above
       case 'studentProfile': 
         return <StudentProfilePage />;
       case 'scholarships': 
