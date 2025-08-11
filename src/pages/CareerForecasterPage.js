@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-const CareerForecasterPage = () => {
+const CareerForecasterPage = ({ studentProfile }) => {
   const { user } = useAuth();
   const [forecastData, setForecastData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,6 +13,17 @@ const CareerForecasterPage = () => {
     targetColleges: '',
     financialGoals: ''
   });
+
+  // ✅ AWESOME ADDITION: Pre-populate form with user's profile data
+  useEffect(() => {
+    if (studentProfile) {
+      setFormData(prev => ({
+        ...prev,
+        careerGoal: studentProfile.career_goals || '',
+        majorInterest: studentProfile.major || '',
+      }));
+    }
+  }, [studentProfile]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

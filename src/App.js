@@ -1,7 +1,13 @@
 // frontend/src/App.js
+
+// Import React and necessary hooks (useState, useEffect)
 import React, { useState, useEffect } from 'react';
+// Import the authentication context to manage user state
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+// Import layout components
 import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
+// Import all the different page components
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import StudentProfilePage from './pages/StudentProfilePage';
@@ -13,8 +19,11 @@ import ReportPage from './pages/ReportPage';
 import StudentVuePage from './pages/StudentVuePage';
 import CompareCollegesPage from './pages/CompareCollegesPage';
 import ProfilePage from './pages/ProfilePage';
-import ErrorBoundary from './components/ErrorBoundary';
 
+/**
+ * The root component of the application.
+ * It wraps the entire app in an ErrorBoundary and the AuthProvider.
+ */
 function App() {
   return (
     <ErrorBoundary>
@@ -25,20 +34,29 @@ function App() {
   );
 }
 
+/**
+ * The Main component handles the primary application logic,
+ * including routing and conditional rendering based on user authentication and profile status.
+ */
 const Main = () => {
+  // Destructure state and functions from the authentication context
   const { user, profile, setProfile, isProfileComplete, loading } = useAuth();
+  // State to manage the current view (acting as a simple router)
   const [view, setView] = useState('dashboard');
+  // State to store the ID of a selected college for detailed views
   const [selectedCollegeId, setSelectedCollegeId] = useState(null);
 
+  /**
+   * This useEffect hook handles routing based on the URL path when the app first loads.
+   * This allows users to navigate directly to a specific page via its URL.
+   */
   useEffect(() => {
-    // Handle OAuth callback route
-    if (window.location.pathname === '/auth/callback') {
+    const path = window.location.pathname;
+    if (path === '/auth/callback') {
       setView('authCallback');
       return;
     }
     
-    // Handle other direct URL routes
-    const path = window.location.pathname;
     if (path === '/dashboard') setView('dashboard');
     else if (path === '/scholarships') setView('scholarships');
     else if (path === '/matching') setView('matching');
@@ -47,38 +65,45 @@ const Main = () => {
     else if (path === '/studentvue') setView('studentVue');
     else if (path === '/profile') setView('profile');
     else if (path === '/report') setView('report');
-  }, []);
+  }, []); // The empty dependency array means this runs only once on mount.
 
-  // Set the profile in the context when the user object is available
+  /**
+   * This useEffect hook updates the profile in the AuthContext
+   * whenever the user object changes (e.g., after login).
+   */
   useEffect(() => {
     if (user && user.profile) {
       setProfile(user.profile);
     }
-  }, [user, setProfile]);
+  }, [user, setProfile]); // Depends on the user and setProfile function.
 
+  // Function to handle selecting a college and switching to the profile view.
   const handleSelectCollege = (unitId) => {
     setSelectedCollegeId(unitId);
     setView('profile');
   };
 
+  // Function to switch to the report generation view.
   const handleGenerateReport = () => {
     setView('report');
   };
 
+  // While the authentication context is loading, display a simple loading message.
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  // Allow AuthCallback to run regardless of user state
+  // If the current view is 'authCallback', render the AuthCallback component to handle the redirect.
   if (view === 'authCallback') {
     return <AuthCallback setView={setView} />;
   }
 
-  // If there is no user, show the login page.
+  // If there is no user authenticated, always show the LoginPage.
   if (!user) {
     return <LoginPage />;
   }
   
+  // If the user is logged in but hasn't completed their profile, force them to the profile page.
   if (!isProfileComplete && view !== 'studentProfile') {
     return (
       <Layout activeView="studentProfile" setView={setView}>
@@ -87,6 +112,10 @@ const Main = () => {
     );
   }
 
+  /**
+   * This function determines which page component to render based on the current 'view' state.
+   * It acts as a client-side router.
+   */
   const renderView = () => {
     switch (view) {
       case 'studentProfile': 
@@ -96,7 +125,7 @@ const Main = () => {
       case 'matching': 
         return <MatchingPage />;
       case 'forecaster': 
-        return <CareerForecasterPage />;
+        return <CareerForecasterPage studentProfile={profile} />;
       case 'compare': 
         return <CompareCollegesPage studentProfile={profile} setView={setView} />;
       case 'studentVue': 
@@ -110,6 +139,8 @@ const Main = () => {
     }
   };
 
+  // Render the main application layout, passing in the current view and the function to change it.
+  // The currently active page component is rendered as a child of the Layout.
   return (
     <Layout activeView={view} setView={setView}>
       {renderView()}
@@ -117,4 +148,5 @@ const Main = () => {
   );
 };
 
+// Export the App component as the default export of this file.
 export default App;
