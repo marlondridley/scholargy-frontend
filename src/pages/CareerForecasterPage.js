@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-=======
 import React, { useState, useEffect } from 'react';
->>>>>>> 85efa78bcbe0e71f23f99074dfb452ed01e11b02
 import { useAuth } from '../contexts/AuthContext';
 
 const CareerForecasterPage = () => {
