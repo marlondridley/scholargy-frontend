@@ -78,19 +78,6 @@ const ScholarshipPage = ({ studentProfile, setView }) => {
   // Load scholarship data on component mount
   useEffect(() => {
     loadScholarshipData();
-    
-    // Test database connectivity
-    const testDatabase = async () => {
-      try {
-        const response = await fetch('/api/scholarships/test');
-        const data = await response.json();
-        console.log('Database test result:', data);
-      } catch (error) {
-        console.error('Database test failed:', error);
-      }
-    };
-    
-    testDatabase();
   }, [loadScholarshipData]);
 
   const handleSearch = async () => {

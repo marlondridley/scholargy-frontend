@@ -1,0 +1,20 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "rewrite": "https://scholargy-dz3lcl3szkm74.azurewebsites.net/api/{*path}"
+    },
+    {
+      "route": "/*",
+      "rewrite": "/index.html"
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/images/*", "/css/*", "/js/*", "/api/*"]
+  },
+  "platform": {
+    "apiRuntime": "node:18"
+  },
+  "trailingSlash": "auto"
+}
