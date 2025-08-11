@@ -1,6 +1,0 @@
-      PID    PPID    PGID     WINPID   TTY         UID    STIME COMMAND
-I    2013       1    2013       4008  cons0     197609 10:54:28 /usr/bin/less
-     2296    2015    2296      21520  pty0      197609 16:22:33 /usr/bin/PS
-     2015    2014    2015      25496  pty0      197609 10:59:48 /usr/bin/bash
-     2014       1    2014      12500  ?         197609 10:59:48 /usr/bin/mintty
-     2297    2015    2015       3320  pty0      197609 16:22:33 /usr/bin/bash

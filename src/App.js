@@ -26,7 +26,7 @@ function App() {
 }
 
 const Main = () => {
-  const { user, profile, setProfile, isProfileComplete, loading } = useAuth();
+  const { user, profile, isProfileComplete, loading } = useAuth();
   const [view, setView] = useState('dashboard');
   const [selectedCollegeId, setSelectedCollegeId] = useState(null);
 
@@ -62,7 +62,7 @@ const Main = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!user) {
+  if (!user && view !== 'authCallback') {
     return <LoginPage />;
   }
   
@@ -76,16 +76,26 @@ const Main = () => {
 
   const renderView = () => {
     switch (view) {
-      case 'authCallback': return <AuthCallback setView={setView} />;
-      case 'studentProfile': return <StudentProfilePage />;
-      case 'scholarships': return <ScholarshipPage studentProfile={profile} setView={setView} />;
-      case 'matching': return <MatchingPage />;
-      case 'forecaster': return <CareerForecasterPage />;
-      case 'compare': return <CompareCollegesPage studentProfile={profile} setView={setView} />;
-      case 'studentVue': return <StudentVuePage />;
-      case 'report': return <ReportPage collegeId={selectedCollegeId} onBack={() => setView('profile')} />;
-      case 'profile': return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} />;
-      default: return <DashboardPage setView={setView} onSelectCollege={handleSelectCollege} studentProfile={profile} />;
+      case 'authCallback': 
+        return <AuthCallback setView={setView} />;
+      case 'studentProfile': 
+        return <StudentProfilePage />;
+      case 'scholarships': 
+        return <ScholarshipPage studentProfile={profile} setView={setView} />;
+      case 'matching': 
+        return <MatchingPage />;
+      case 'forecaster': 
+        return <CareerForecasterPage />;
+      case 'compare': 
+        return <CompareCollegesPage studentProfile={profile} setView={setView} />;
+      case 'studentVue': 
+        return <StudentVuePage />;
+      case 'report': 
+        return <ReportPage collegeId={selectedCollegeId} onBack={() => setView('profile')} />;
+      case 'profile': 
+        return <ProfilePage collegeId={selectedCollegeId} onBack={() => setView('dashboard')} onGenerateReport={handleGenerateReport} />;
+      default: 
+        return <DashboardPage setView={setView} onSelectCollege={handleSelectCollege} studentProfile={profile} />;
     }
   };
 

@@ -10,31 +10,27 @@ const AuthCallback = ({ setView }) => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const error = urlParams.get('error');
-        const code = urlParams.get('code');
+        const authError = urlParams.get('error');
 
-        if (error) {
-          setError(`Authentication error: ${error}`);
+        if (authError) {
+          setError(`Authentication error: ${authError}`);
           setAuthLoading(false);
           return;
         }
 
-        // Wait for AuthContext to process the authentication
-        if (!loading) {
-          if (user) {
-            // User is authenticated, check profile completion
-            if (isProfileComplete) {
-              setView('dashboard');
-            } else {
-              setView('studentProfile');
-            }
+        if (loading) return; // wait until auth context is done
+
+        if (user) {
+          if (isProfileComplete) {
+            setView('dashboard');
           } else {
-            // No user found, authentication failed
-            setError('Authentication failed. Please try again.');
-            setAuthLoading(false);
+            setView('studentProfile');
           }
+          setAuthLoading(false);
+        } else {
+          setError('Authentication failed. Please try again.');
+          setAuthLoading(false);
         }
       } catch (err) {
         console.error('Auth callback error:', err);
@@ -43,9 +39,7 @@ const AuthCallback = ({ setView }) => {
       }
     };
 
-    // Add a small delay to allow AuthContext to process
-    const timer = setTimeout(handleAuthCallback, 1000);
-    return () => clearTimeout(timer);
+    handleAuthCallback();
   }, [user, isProfileComplete, loading, setView]);
 
   if (authLoading) {
@@ -79,9 +73,7 @@ const AuthCallback = ({ setView }) => {
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
               Authentication Error
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              {error}
-            </p>
+            <p className="mt-2 text-sm text-gray-600">{error}</p>
             <div className="mt-6">
               <button
                 onClick={() => setView('login')}
@@ -96,7 +88,6 @@ const AuthCallback = ({ setView }) => {
     );
   }
 
-  // Success state - redirect should happen via useEffect
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8">
