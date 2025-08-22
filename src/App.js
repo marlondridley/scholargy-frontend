@@ -18,7 +18,14 @@ import CompareCollegesPage from './pages/CompareCollegesPage';
 import ProfilePage from './pages/ProfilePage'; 
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
+import { testEnvironmentVariables } from './utils/envTest';
+
 function App() {
+  console.log('App component rendering');
+  
+  // Test environment variables
+  testEnvironmentVariables();
+
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -34,7 +41,14 @@ const Main = () => {
   const { user, isProfileComplete, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Scholargy...</p>
+        </div>
+      </div>
+    );
   }
 
   // Routes for unauthenticated users

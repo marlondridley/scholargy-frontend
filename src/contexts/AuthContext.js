@@ -15,19 +15,30 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const getInitialSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
-            setLoading(false);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                setUser(session?.user ?? null);
+            } catch (error) {
+                console.error('Failed to get initial session:', error);
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }
         };
         getInitialSession();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log(`Supabase auth event: ${event}`, session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+        try {
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                console.log(`Supabase auth event: ${event}`, session);
+                setUser(session?.user ?? null);
+                setLoading(false);
+            });
 
-        return () => subscription.unsubscribe();
+            return () => subscription.unsubscribe();
+        } catch (error) {
+            console.error('Failed to set up auth state change listener:', error);
+            setLoading(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -66,27 +77,76 @@ export const AuthProvider = ({ children }) => {
         isProfileComplete,
         setIsProfileComplete,
         loading,
-        signIn: (data) => supabase.auth.signInWithPassword(data),
-        signUp: (data) => supabase.auth.signUp(data),
-        signOut: () => supabase.auth.signOut(),
-        signInWithGoogle: () => supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: `${window.location.origin}/auth/callback` }
-        }),
-        resetPasswordForEmail: (email) => supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/update-password`,
-        }),
-        signInWithOtp: (email) => supabase.auth.signInWithOtp({
-            email: email,
-            options: {
-                shouldCreateUser: false,
-            },
-        }),
-        verifyOtp: (email, token) => supabase.auth.verifyOtp({
-            email,
-            token,
-            type: 'email',
-        }),
+        signIn: async (data) => {
+            try {
+                return await supabase.auth.signInWithPassword(data);
+            } catch (error) {
+                console.error('Sign in error:', error);
+                throw error;
+            }
+        },
+        signUp: async (data) => {
+            try {
+                return await supabase.auth.signUp(data);
+            } catch (error) {
+                console.error('Sign up error:', error);
+                throw error;
+            }
+        },
+        signOut: async () => {
+            try {
+                return await supabase.auth.signOut();
+            } catch (error) {
+                console.error('Sign out error:', error);
+                throw error;
+            }
+        },
+        signInWithGoogle: async () => {
+            try {
+                return await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: `${window.location.origin}/auth/callback` }
+                });
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                throw error;
+            }
+        },
+        resetPasswordForEmail: async (email) => {
+            try {
+                return await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/update-password`,
+                });
+            } catch (error) {
+                console.error('Reset password error:', error);
+                throw error;
+            }
+        },
+        signInWithOtp: async (email) => {
+            try {
+                return await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: false,
+                    },
+                });
+            } catch (error) {
+                console.error('OTP sign in error:', error);
+                throw error;
+            }
+        },
+        verifyOtp: async (email, token) => {
+            try {
+                return await supabase.auth.verifyOtp({
+                    email,
+                    token,
+                    type: 'email',
+                });
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                throw error;
+            }
+        },
     };
 
     return (

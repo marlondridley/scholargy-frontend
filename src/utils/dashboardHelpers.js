@@ -7,25 +7,46 @@
  */
 export async function getDashboardData(userId, profile = null) {
   try {
-    // Fetch all required data in parallel
-    const [studentProfile, collegeMatches, scholarships, careerInsights] = await Promise.all([
+    // Validate inputs
+    if (!userId) {
+      console.warn('No userId provided to getDashboardData');
+      return getFallbackData(profile);
+    }
+
+    console.log('Fetching dashboard data for userId:', userId);
+
+    // Fetch all required data in parallel with individual error handling
+    const [studentProfile, collegeMatches, scholarships, careerInsights] = await Promise.allSettled([
       fetchStudentProfile(userId, profile),
       fetchCollegeMatches(userId),
       fetchScholarships(userId, profile),
       fetchCareerInsights(userId, profile)
     ]);
 
+    // Extract results with fallbacks
+    const studentProfileResult = studentProfile.status === 'fulfilled' ? studentProfile.value : profile;
+    const collegeMatchesResult = collegeMatches.status === 'fulfilled' ? collegeMatches.value : [];
+    const scholarshipsResult = scholarships.status === 'fulfilled' ? scholarships.value : { totalEligibleAmount: 0, opportunities: [] };
+    const careerInsightsResult = careerInsights.status === 'fulfilled' ? careerInsights.value : '';
+
+    console.log('Dashboard data fetched:', {
+      hasProfile: !!studentProfileResult,
+      collegeCount: collegeMatchesResult.length,
+      scholarshipCount: scholarshipsResult.opportunities?.length || 0,
+      hasCareerInsights: !!careerInsightsResult
+    });
+
     // Generate AI-powered insights
-    const insights = await generateAIInsights(studentProfile, collegeMatches, scholarships);
+    const insights = await generateAIInsights(studentProfileResult, collegeMatchesResult, scholarshipsResult);
 
     return {
-      studentProfile,
-      topColleges: collegeMatches,
-      scholarships,
-      careerInsights,
+      studentProfile: studentProfileResult,
+      topColleges: collegeMatchesResult,
+      scholarships: scholarshipsResult,
+      careerInsights: careerInsightsResult,
       actionPlan: insights.actionPlan,
       admissionProbabilities: insights.probabilities,
-      userStats: calculateUserStats(studentProfile),
+      userStats: calculateUserStats(studentProfileResult),
       context: insights.context
     };
   } catch (error) {
@@ -41,10 +62,14 @@ async function fetchStudentProfile(userId, profile = null) {
   if (profile) return profile;
   
   try {
+    console.log('Fetching student profile for userId:', userId);
     const response = await fetch(`/api/profile/${userId}`);
     if (response.ok) {
       const data = await response.json();
+      console.log('Student profile fetched:', data);
       return data.profile || data;
+    } else {
+      console.warn('Failed to fetch student profile:', response.status, response.statusText);
     }
   } catch (error) {
     console.warn('Failed to fetch student profile:', error);
@@ -58,11 +83,15 @@ async function fetchStudentProfile(userId, profile = null) {
  */
 async function fetchCollegeMatches(userId) {
   try {
+    console.log('Fetching college matches for userId:', userId);
     // First try to get cached matches
     const response = await fetch(`/api/dashboard/top-matches?userId=${userId}`);
     if (response.ok) {
       const data = await response.json();
+      console.log('College matches fetched:', data.results?.length || 0, 'matches');
       return data.results || [];
+    } else {
+      console.warn('Failed to fetch college matches:', response.status, response.statusText);
     }
   } catch (error) {
     console.warn('Failed to fetch college matches:', error);

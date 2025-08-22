@@ -5,13 +5,18 @@ import { supabase } from '../utils/supabase';
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 const getAuthHeaders = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error("Authentication token not found.");
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    };
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) throw new Error("Authentication token not found.");
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        };
+    } catch (error) {
+        console.error('Failed to get auth headers:', error);
+        throw new Error("Authentication failed. Please log in again.");
+    }
 };
 
 const makeRequest = async (endpoint, options = {}, requireAuth = false) => {

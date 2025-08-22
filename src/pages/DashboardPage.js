@@ -38,8 +38,11 @@ export default function DashboardPage() {
       setError(null);
       
       try {
+        console.log('Starting dashboard data fetch for user:', user?.id);
+        
         // Use the comprehensive dashboard helper
         const data = await getDashboardData(user?.id, profile);
+        console.log('Dashboard data received:', data);
         setDashboardData(data);
         
         // Log context information for debugging
@@ -57,6 +60,7 @@ export default function DashboardPage() {
     if (user?.id) {
       fetchDashboardData();
     } else {
+      console.log('No user ID available, skipping dashboard fetch');
       setLoading(false);
     }
   }, [user?.id, profile]);
