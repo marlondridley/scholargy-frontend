@@ -19,7 +19,7 @@ const getAuthHeaders = async () => {
     }
 };
 
-const makeRequest = async (endpoint, options = {}, requireAuth = false) => {
+export const makeRequest = async (endpoint, options = {}, requireAuth = false) => {
     try {
         const url = `${API_BASE_URL}${endpoint}`;
         let headers = { 'Content-Type': 'application/json' };

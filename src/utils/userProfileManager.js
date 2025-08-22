@@ -14,8 +14,8 @@ export class UserProfileManager {
    */
   static async getUserProfile(userId) {
     try {
-      const response = await makeRequest(`/profile/${userId}`, 'GET');
-      return response.data;
+      const response = await makeRequest(`/profile/${userId}`, {}, true);
+      return response.data || response;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
@@ -30,8 +30,11 @@ export class UserProfileManager {
    */
   static async createOrUpdateProfile(userId, profileData) {
     try {
-      const response = await makeRequest(`/profile/${userId}`, 'POST', profileData);
-      return response.data;
+      const response = await makeRequest(`/profile/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({ profileData })
+      }, true);
+      return response.data || response;
     } catch (error) {
       console.error('Error creating/updating user profile:', error);
       return null;
@@ -45,8 +48,8 @@ export class UserProfileManager {
    */
   static async getUserAssessment(userId) {
     try {
-      const response = await makeRequest(`/profile/${userId}/assessment`, 'GET');
-      return response.data;
+      const response = await makeRequest(`/profile/${userId}/assessment`, {}, true);
+      return response.data || response;
     } catch (error) {
       console.error('Error fetching user assessment:', error);
       return null;

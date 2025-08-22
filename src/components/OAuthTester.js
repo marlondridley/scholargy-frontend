@@ -1,5 +1,5 @@
 // src/components/OAuthTester.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserProfileManager } from '../utils/userProfileManager';
 
@@ -257,7 +257,7 @@ const OAuthTester = () => {
         addLog('Testing email/password sign in...', 'info');
         
         try {
-            const { data, error } = await signIn({
+            const { error } = await signIn({
                 email: 'test@example.com',
                 password: 'testpassword123'
             });

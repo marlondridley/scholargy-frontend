@@ -83,7 +83,7 @@ const LoginPage = () => {
       setError('');
       setLoading(true);
       try {
-        const { data, error } = await handleGoogleIdToken(response);
+        const { error } = await handleGoogleIdToken(response);
         if (error) throw error;
         
         // Success - AuthCallback will handle the redirect

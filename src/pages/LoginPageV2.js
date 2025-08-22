@@ -1,11 +1,9 @@
 // src/pages/LoginPageV2.js
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import SupabaseAuth from '../components/SupabaseAuth';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPageV2 = () => {
-  const navigate = useNavigate();
   const { setUser } = useAuth();
 
   const handleAuthSuccess = (session) => {
