@@ -1,0 +1,18 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/static/css/*", "/static/js/*", "/static/media/*", "*.{png,jpg,gif,ico,svg}"]
+  },
+  "routes": [
+    {
+      "route": "/auth/*",
+      "serve": "/index.html"
+    }
+  ],
+  "platformErrorOverrides": [
+    {
+      "errorType": "NotFound",
+      "serve": "/index.html"
+    }
+  ]
+}
