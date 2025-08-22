@@ -3,16 +3,71 @@
     "rewrite": "/index.html",
     "exclude": ["/static/css/*", "/static/js/*", "/static/media/*", "*.{png,jpg,gif,ico,svg}"]
   },
-                "routes": [
-                {
-                  "route": "/auth/*",
-                  "serve": "/index.html"
-                },
-                {
-                  "route": "/reset-password/*",
-                  "serve": "/index.html"
-                }
-              ],
+  "routes": [
+    {
+      "route": "/auth/callback",
+      "serve": "/index.html",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "route": "/auth/*",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/reset-password/*",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/test-oauth",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/login",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/login-v2",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/dashboard",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/student-profile",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/scholarships",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/matching",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/forecaster",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/compare",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/studentvue",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/report/*",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/profile/*",
+      "serve": "/index.html"
+    }
+  ],
   "platformErrorOverrides": [
     {
       "errorType": "NotFound",
