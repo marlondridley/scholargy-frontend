@@ -17,6 +17,9 @@ import CompareCollegesPage from './pages/CompareCollegesPage';
 // Using your original ProfilePage for college details
 import ProfilePage from './pages/ProfilePage'; 
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ResetPasswordConfirmPage from './pages/ResetPasswordConfirmPage';
+import LoginPageV2 from './pages/LoginPageV2';
+import OAuthTester from './components/OAuthTester';
 
 import { testEnvironmentVariables } from './utils/envTest';
 
@@ -55,7 +58,9 @@ const Main = () => {
       <Routes>
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/login-v2" element={<LoginPageV2 />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/reset-password/confirm" element={<ResetPasswordConfirmPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
@@ -87,6 +92,8 @@ const Main = () => {
         <Route path="/report/:collegeId" element={<ReportPage />} />
         {/* Restored the original route to use ProfilePage for college details */}
         <Route path="/profile/:collegeId" element={<ProfilePage />} />
+        {/* OAuth Testing Route - Remove in production */}
+        <Route path="/test-oauth" element={<OAuthTester />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>

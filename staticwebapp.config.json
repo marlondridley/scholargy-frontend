@@ -3,12 +3,16 @@
     "rewrite": "/index.html",
     "exclude": ["/static/css/*", "/static/js/*", "/static/media/*", "*.{png,jpg,gif,ico,svg}"]
   },
-  "routes": [
-    {
-      "route": "/auth/*",
-      "serve": "/index.html"
-    }
-  ],
+                "routes": [
+                {
+                  "route": "/auth/*",
+                  "serve": "/index.html"
+                },
+                {
+                  "route": "/reset-password/*",
+                  "serve": "/index.html"
+                }
+              ],
   "platformErrorOverrides": [
     {
       "errorType": "NotFound",

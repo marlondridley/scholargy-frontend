@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../utils/supabase';
 import { getProfile, createProfile } from '../services/api';
+import { handleSignInWithOAuth, extractGoogleTokens } from '../utils/googleAuth';
 
 const AuthContext = createContext(null);
 
@@ -27,13 +28,42 @@ export const AuthProvider = ({ children }) => {
         };
         getInitialSession();
 
-        try {
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                console.log(`Supabase auth event: ${event}`, session);
-                setUser(session?.user ?? null);
-                setLoading(false);
-            });
+        const handleAuthChange = async (event, session) => {
+            console.log(`Supabase auth event: ${event}`, session);
+            
+            if (event === "SIGNED_IN" && session?.user) {
+                const user = session.user;
+                
+                try {
+                    // Store basic user data in localStorage for offline access
+                    const userData = {
+                        email: user.email,
+                        name: user.user_metadata?.full_name || user.email,
+                        img_url: user.user_metadata?.avatar_url,
+                        provider: user.app_metadata?.provider || 'email',
+                        created_at: new Date().toISOString(),
+                    };
+                    
+                    localStorage.setItem("user", JSON.stringify(userData));
+                    console.log("User data stored in localStorage:", userData);
+                    
+                    // Note: User profile data will be managed through the backend API
+                    // which connects to Azure CosmosDB for the actual user profile storage
+                    
+                } catch (error) {
+                    console.error("Error in handleAuthChange:", error);
+                }
+            } else if (event === "SIGNED_OUT") {
+                // Clear localStorage on sign out
+                localStorage.removeItem("user");
+            }
+            
+            setUser(session?.user ?? null);
+            setLoading(false);
+        };
 
+        try {
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
             return () => subscription.unsubscribe();
         } catch (error) {
             console.error('Failed to set up auth state change listener:', error);
@@ -45,17 +75,27 @@ export const AuthProvider = ({ children }) => {
         const manageUserProfile = async () => {
             if (user) {
                 try {
+                    // Get user profile from backend API (CosmosDB)
                     let userProfile = await getProfile(user.id);
+                    
                     if (!userProfile) {
+                        // Create new user profile in CosmosDB through backend API
                         const newProfileData = {
                             email: user.email,
                             fullName: user.user_metadata?.full_name,
                             avatarUrl: user.user_metadata?.avatar_url,
                             provider: user.app_metadata?.provider || 'email',
+                            // Add any additional fields needed for your application
+                            gpa: null,
+                            major: null,
+                            graduationYear: null,
+                            // ... other profile fields
                         };
                         userProfile = await createProfile(user.id, newProfileData);
                     }
+                    
                     setProfile(userProfile);
+                    // Check if profile is complete (has required fields like GPA)
                     setIsProfileComplete(!!userProfile?.gpa); 
                 } catch (error) {
                     console.error("Error managing user profile:", error);
@@ -77,6 +117,10 @@ export const AuthProvider = ({ children }) => {
         isProfileComplete,
         setIsProfileComplete,
         loading,
+        getUserData: () => {
+            const userData = localStorage.getItem("user");
+            return userData ? JSON.parse(userData) : null;
+        },
         signIn: async (data) => {
             try {
                 return await supabase.auth.signInWithPassword(data);
@@ -87,7 +131,12 @@ export const AuthProvider = ({ children }) => {
         },
         signUp: async (data) => {
             try {
-                return await supabase.auth.signUp(data);
+                return await supabase.auth.signUp({
+                    ...data,
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/auth/callback`,
+                    }
+                });
             } catch (error) {
                 console.error('Sign up error:', error);
                 throw error;
@@ -103,10 +152,14 @@ export const AuthProvider = ({ children }) => {
         },
         signInWithGoogle: async () => {
             try {
-                return await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: { redirectTo: `${window.location.origin}/auth/callback` }
-                });
+                const result = await handleSignInWithOAuth();
+                
+                // Extract and store Google tokens if available
+                if (result.data?.session) {
+                    extractGoogleTokens(result.data.session);
+                }
+                
+                return result;
             } catch (error) {
                 console.error('Google sign in error:', error);
                 throw error;
@@ -115,7 +168,7 @@ export const AuthProvider = ({ children }) => {
         resetPasswordForEmail: async (email) => {
             try {
                 return await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/update-password`,
+                    redirectTo: `${window.location.origin}/reset-password/confirm`,
                 });
             } catch (error) {
                 console.error('Reset password error:', error);
@@ -144,6 +197,16 @@ export const AuthProvider = ({ children }) => {
                 });
             } catch (error) {
                 console.error('OTP verification error:', error);
+                throw error;
+            }
+        },
+        updatePassword: async (newPassword) => {
+            try {
+                return await supabase.auth.updateUser({ 
+                    password: newPassword 
+                });
+            } catch (error) {
+                console.error('Update password error:', error);
                 throw error;
             }
         },

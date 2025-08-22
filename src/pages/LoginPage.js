@@ -1,7 +1,8 @@
 // src/pages/LoginPage.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { handleSignInWithGoogle as handleGoogleIdToken } from '../utils/googleAuth';
 
 const EyeIcon = ({ closed }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500">
@@ -54,20 +55,20 @@ const LoginPage = () => {
       let authResponse;
       if (authMode === 'signup') {
         authResponse = await signUp({ email, password });
+        if (authResponse.error) throw authResponse.error;
         setMessage('Check your email for a confirmation link to complete registration.');
       } else if (authMode === 'signin') {
         authResponse = await signIn({ email, password });
+        if (authResponse.error) throw authResponse.error;
       } else if (authMode === 'otp') {
         if (!token) {
           authResponse = await signInWithOtp(email);
+          if (authResponse.error) throw authResponse.error;
           setMessage('A one-time code has been sent to your email.');
         } else {
           authResponse = await verifyOtp(email, token);
+          if (authResponse.error) throw authResponse.error;
         }
-      }
-
-      if (authResponse && authResponse.error) {
-        throw authResponse.error;
       }
     } catch (err) {
       setError(err.message || 'An unexpected error occurred.');
@@ -76,12 +77,40 @@ const LoginPage = () => {
     }
   };
 
+  // Set up Google Sign-In callback in global scope
+  useEffect(() => {
+    window.handleSignInWithGoogle = async (response) => {
+      setError('');
+      setLoading(true);
+      try {
+        const { data, error } = await handleGoogleIdToken(response);
+        if (error) throw error;
+        
+        // Success - AuthCallback will handle the redirect
+        console.log('Google sign-in successful');
+      } catch (err) {
+        setError(err.message || 'Failed to sign in with Google.');
+        setLoading(false);
+      }
+    };
+
+    return () => {
+      delete window.handleSignInWithGoogle;
+    };
+  }, []);
+
   const handleGoogleLogin = async () => {
     setError('');
     setLoading(true);
     try {
-      const { error } = await signInWithGoogle();
+      const { data, error } = await signInWithGoogle();
       if (error) throw error;
+      
+      // If we get a URL back, redirect to it (for server-side flow)
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+      // For browser-based flow, Supabase will handle the redirect automatically
     } catch (err) {
       setError(err.message || 'Failed to sign in with Google.');
       setLoading(false);
@@ -99,10 +128,32 @@ const LoginPage = () => {
               {authMode === 'otp' && 'Sign in with a one-time code'}
             </p>
             
+            {/* Google Pre-built Sign-In Button */}
+            <div
+              id="g_id_onload"
+              data-client_id={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+              data-context="signin"
+              data-ux_mode="popup"
+              data-callback="handleSignInWithGoogle"
+              data-auto_select="true"
+              data-itp_support="true"
+              data-use_fedcm_for_prompt="true"
+            ></div>
+            <div
+              className="g_id_signin w-full"
+              data-type="standard"
+              data-shape="rectangular"
+              data-theme="outline"
+              data-text="signin_with"
+              data-size="large"
+              data-logo_alignment="left"
+            ></div>
+
+            {/* Fallback Custom Button */}
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center disabled:opacity-50"
+              className="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center disabled:opacity-50 mt-2"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48">
                 <path fill="#4285F4" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path>
@@ -110,7 +161,7 @@ const LoginPage = () => {
                 <path fill="#FBBC05" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path>
                 <path fill="#EA4335" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l6.19 5.238C42.012 35.245 44 30.035 44 24c0-1.341-.138-2.65-.389-3.917z"></path>
               </svg>
-              Sign in with Google
+              Sign in with Google (Fallback)
             </button>
 
             <div className="my-6 flex items-center">
