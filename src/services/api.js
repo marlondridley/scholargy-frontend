@@ -143,7 +143,7 @@ export const searchScholarships = (params) => makeRequest('/scholarships/search'
     body: JSON.stringify(params) 
 });
 
-export const getScholarshipStats = (studentProfile) => makeRequest('/scholarships/stats', {
+export const getScholarshipStatsByProfile = (studentProfile) => makeRequest('/scholarships/stats', {
     method: 'POST',
     body: JSON.stringify({ studentProfile })
 });
