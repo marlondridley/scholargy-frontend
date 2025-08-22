@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { sendRagQuery } from '../services/api';
 
 const CareerForecasterPage = () => {
-  const { user, profile } = useAuth(); // Using profile from auth context
+  const { profile } = useAuth(); // Using profile from auth context
   const [forecastData, setForecastData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

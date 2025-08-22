@@ -52,6 +52,50 @@ const ScholarshipsPage = () => {
         setFilters(prev => ({ ...prev, [name]: value }));
     };
 
+    // Calculate total eligible amount using useMemo for performance
+    const totalAmount = useMemo(() => {
+        return scholarships.reduce((sum, s) => sum + (s.amount || 0), 0);
+    }, [scholarships]);
+
+    // Sort scholarships by deadline for display
+    const sortedScholarships = useMemo(() => {
+        return [...scholarships].sort((a, b) => {
+            const dateA = new Date(a.deadline || 0);
+            const dateB = new Date(b.deadline || 0);
+            return dateA - dateB;
+        });
+    }, [scholarships]);
+
+    // Filter scholarships based on search term and filters
+    const filteredScholarships = useMemo(() => {
+        let filtered = sortedScholarships;
+        
+        // Filter by minimum amount
+        if (filters.minAmount) {
+            filtered = filtered.filter(s => (s.amount || 0) >= parseInt(filters.minAmount));
+        }
+        
+        // Filter by maximum deadline
+        if (filters.maxDeadline) {
+            const maxDate = new Date(filters.maxDeadline);
+            filtered = filtered.filter(s => {
+                const deadline = new Date(s.deadline || 0);
+                return deadline <= maxDate;
+            });
+        }
+        
+        // Apply sorting
+        switch (filters.sortBy) {
+            case 'amount_desc':
+                return filtered.sort((a, b) => (b.amount || 0) - (a.amount || 0));
+            case 'amount_asc':
+                return filtered.sort((a, b) => (a.amount || 0) - (b.amount || 0));
+            case 'deadline_asc':
+            default:
+                return filtered.sort((a, b) => new Date(a.deadline || 0) - new Date(b.deadline || 0));
+        }
+    }, [sortedScholarships, filters]);
+
     const formatCurrency = (amount) => {
         if (typeof amount !== 'number') return '$0';
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
@@ -99,6 +143,27 @@ const ScholarshipsPage = () => {
                 />
             </div>
 
+            {/* Results Summary */}
+            {!loading && !error && scholarships.length > 0 && (
+                <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg font-semibold text-green-800">
+                                {filteredScholarships.length} Scholarships Found
+                            </h3>
+                            <p className="text-sm text-green-600">
+                                Total Eligible Amount: {formatCurrency(totalAmount)}
+                            </p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-green-600">
+                                Average Amount: {formatCurrency(totalAmount / filteredScholarships.length)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Results Section */}
             <div>
                 {loading ? (
@@ -110,14 +175,14 @@ const ScholarshipsPage = () => {
                     <div className="text-center py-10 bg-red-50 p-6 rounded-lg">
                         <p className="text-red-600 font-semibold">{error}</p>
                     </div>
-                ) : scholarships.length === 0 ? (
+                ) : filteredScholarships.length === 0 ? (
                     <div className="text-center py-10 bg-gray-50 p-6 rounded-lg">
                         <p className="text-gray-600 font-semibold">No scholarships found.</p>
                         <p className="text-gray-500">Try adjusting your search or filters.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {scholarships.map(scholarship => (
+                        {filteredScholarships.map(scholarship => (
                             <div
                                 key={scholarship._id}
                                 onClick={() => navigate(`/scholarship/${scholarship._id}`)}
