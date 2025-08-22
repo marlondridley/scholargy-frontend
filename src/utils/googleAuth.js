@@ -45,6 +45,7 @@ export const handleSignInWithOAuth = async (nonce = null) => {
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
+        scope: 'email profile openid'
       }
     };
 
