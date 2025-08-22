@@ -1,9 +1,14 @@
+// src/pages/ScholarshipDetailPage.js
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+// CORRECTED: Imported useNavigate for routing
+import { useParams, useNavigate } from 'react-router-dom';
 import { getScholarshipById } from '../services/api';
 
-const ScholarshipDetailPage = ({ setView }) => {
+// REMOVED: setView prop is no longer needed
+const ScholarshipDetailPage = () => {
   const { id } = useParams();
+  // CORRECTED: Initialize useNavigate
+  const navigate = useNavigate();
   const [scholarship, setScholarship] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,6 +33,7 @@ const ScholarshipDetailPage = ({ setView }) => {
   }, [id]);
 
   const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') return '$0';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -62,8 +68,9 @@ const ScholarshipDetailPage = ({ setView }) => {
     return (
       <div className="text-center py-8">
         <div className="text-red-600 text-lg font-semibold mb-2">{error}</div>
+        {/* CORRECTED: Uses navigate for routing */}
         <button
-          onClick={() => setView('scholarships')}
+          onClick={() => navigate('/scholarships')}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
           Back to Scholarships
@@ -76,8 +83,9 @@ const ScholarshipDetailPage = ({ setView }) => {
     return (
       <div className="text-center py-8">
         <div className="text-gray-600 text-lg font-semibold mb-2">Scholarship not found</div>
+        {/* CORRECTED: Uses navigate for routing */}
         <button
-          onClick={() => setView('scholarships')}
+          onClick={() => navigate('/scholarships')}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
           Back to Scholarships
@@ -92,8 +100,9 @@ const ScholarshipDetailPage = ({ setView }) => {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
+            {/* CORRECTED: Uses navigate for routing */}
             <button
-              onClick={() => setView('scholarships')}
+              onClick={() => navigate('/scholarships')}
               className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors"
             >
               <span>←</span>
@@ -260,4 +269,4 @@ const ScholarshipDetailPage = ({ setView }) => {
   );
 };
 
-export default ScholarshipDetailPage; 
+export default ScholarshipDetailPage;

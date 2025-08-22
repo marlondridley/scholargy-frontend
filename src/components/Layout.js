@@ -1,20 +1,19 @@
-// Layout.js - A wrapper component that provides a consistent layout for all pages.
-
+// src/components/Layout.js
+// This component provides a consistent layout with a sidebar and header for all authenticated pages.
 import React from 'react';
-import Header from './Header';
+import Header from './Header'; // Assuming you have a Header component
 import Sidebar from './Sidebar';
 
-const Layout = ({ children, activeView, setView }) => {
+// The `children` prop will be the specific page component rendered by the router.
+const Layout = ({ children }) => {
   return (
-    // Main container with a light gray background, consistent font, and flex layout.
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800 flex">
-      {/* The sidebar component for navigation. */}
-      <Sidebar activeView={activeView} setView={setView} />
-      {/* The main content area that grows to fill the available space. */}
+      <Sidebar />
       <div className="flex-1 flex flex-col">
-        <Header />
+        {/* You can create a simple Header component if you don't have one */}
+        {/* <Header /> */}
         <main className="flex-1 p-6 lg:p-8">
-          {children} {/* Renders the actual page content. */}
+          {children}
         </main>
       </div>
     </div>

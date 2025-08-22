@@ -1,16 +1,2 @@
-// api/index.js - Main API module exports
-
-// Export all RAG-related functions
-export * from './rag.js';
-
-// Export all institution-related functions
-export * from './institutions.js';
-
-// Export all profile-related functions
-export * from './profile.js';
-
-// Export all probability-related functions
-export * from './probability.js';
-
-// Export all scholarship-related functions
-export * from './scholarships.js'; 
+// src/services/api/index.js - Re-export all API functions from the consolidated api.js file
+export * from '../api.js'; 

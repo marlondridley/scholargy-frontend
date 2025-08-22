@@ -1,3 +1,4 @@
+// src/pages/AuthCallback.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -8,34 +9,31 @@ const AuthCallback = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (loading) return; // Wait until the auth context has loaded the user state
+    if (loading) return;
 
-    const urlParams = new URLSearchParams(window.location.hash.substring(1)); // OAuth data is in the hash
-    const authError = urlParams.get("error");
-    const errorDescription = urlParams.get("error_description");
+    const urlParams = new URLSearchParams(window.location.hash.substring(1));
+    const authError = urlParams.get("error_description");
 
     if (authError) {
-      setError(`Authentication error: ${errorDescription || authError}`);
+      setError(`Authentication error: ${authError}`);
       return;
     }
 
     if (user) {
-      // User object is available, now redirect
       if (isProfileComplete) {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       } else {
-        navigate("/student-profile");
+        navigate("/student-profile", { replace: true });
       }
     } else if (!loading) {
-      // If still no user after loading, then something failed
-      setError("Authentication failed. Please try logging in again.");
+      setError("Authentication failed after callback. Please try logging in again.");
     }
   }, [loading, user, isProfileComplete, navigate]);
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full text-center p-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="max-w-md w-full text-center p-8 bg-white shadow-lg rounded-lg">
           <h2 className="text-2xl font-bold text-red-600">Authentication Error</h2>
           <p className="mt-2 text-gray-600">{error}</p>
           <button
@@ -61,4 +59,4 @@ const AuthCallback = () => {
   );
 };
 
-export default AuthCallback; 
+export default AuthCallback;

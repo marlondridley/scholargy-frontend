@@ -1,4 +1,4 @@
-// frontend/src/contexts/AuthContext.js
+// src/contexts/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../utils/supabase';
 import { getProfile, createProfile } from '../services/api';
@@ -21,7 +21,8 @@ export const AuthProvider = ({ children }) => {
         };
         getInitialSession();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log(`Supabase auth event: ${event}`, session);
             setUser(session?.user ?? null);
             setLoading(false);
         });
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
                         userProfile = await createProfile(user.id, newProfileData);
                     }
                     setProfile(userProfile);
-                    setIsProfileComplete(!!userProfile?.gpa);
+                    setIsProfileComplete(!!userProfile?.gpa); 
                 } catch (error) {
                     console.error("Error managing user profile:", error);
                     setProfile(null);
@@ -72,9 +73,33 @@ export const AuthProvider = ({ children }) => {
             provider: 'google',
             options: { redirectTo: `${window.location.origin}/auth/callback` }
         }),
+        resetPasswordForEmail: (email) => supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/update-password`,
+        }),
+        signInWithOtp: (email) => supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+                shouldCreateUser: false,
+            },
+        }),
+        verifyOtp: (email, token) => supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'email',
+        }),
     };
 
-    return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};

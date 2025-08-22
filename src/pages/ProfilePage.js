@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// Import hooks from react-router-dom
+import { useParams, useNavigate } from 'react-router-dom';
 import { getInstitutionDetails } from '../services/api';
 
 const DataCard = ({ title, children, icon }) => (
@@ -30,7 +32,11 @@ const ScoreBar = ({ min, max, label, range = 1600 }) => {
 };
 
 
-const ProfilePage = ({ collegeId, onBack, onGenerateReport, studentProfile }) => {
+const ProfilePage = () => {
+    // Get the dynamic 'collegeId' from the URL
+    const { collegeId } = useParams();
+    // Get the navigate function for programmatic navigation
+    const navigate = useNavigate();
     const [college, setCollege] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -41,7 +47,10 @@ const ProfilePage = ({ collegeId, onBack, onGenerateReport, studentProfile }) =>
             setCollege(details);
             setLoading(false);
         };
-        fetchDetails();
+        // Fetch details whenever the collegeId from the URL changes
+        if (collegeId) {
+            fetchDetails();
+        }
     }, [collegeId]);
 
     if (loading) return <div className="text-center p-10">Loading College Profile...</div>;
@@ -51,8 +60,9 @@ const ProfilePage = ({ collegeId, onBack, onGenerateReport, studentProfile }) =>
 	
     return (
         <div>
-            <button onClick={onBack} className="mb-6 bg-white text-gray-800 px-4 py-2 rounded-lg border shadow-sm hover:bg-gray-100 transition-colors">
-                &larr; Back to Dashboard
+            {/* Use navigate(-1) to go back to the previous page */}
+            <button onClick={() => navigate(-1)} className="mb-6 bg-white text-gray-800 px-4 py-2 rounded-lg border shadow-sm hover:bg-gray-100 transition-colors">
+                &larr; Back
             </button>
             <div className="bg-white p-8 rounded-xl shadow-lg border mb-8">
                 <h1 className="text-4xl font-extrabold text-gray-900">{general_info.name}</h1>
@@ -87,7 +97,8 @@ const ProfilePage = ({ collegeId, onBack, onGenerateReport, studentProfile }) =>
                         <p><strong>Graduation Rate:</strong> {outcomes.grad_rate_total || 'N/A'}%</p>
                         <p><strong>Derived Grad Rate (150%):</strong> {derivedData?.grad_rate_150_percent_total || 'N/A'}%</p>
                     </DataCard>
-                    <button onClick={onGenerateReport} className="w-full bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-green-700 transition-all transform hover:scale-105">
+                    {/* Use navigate to go to the report page for the current college */}
+                    <button onClick={() => navigate(`/report/${collegeId}`)} className="w-full bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-green-700 transition-all transform hover:scale-105">
                         Generate Scholargy Report
                     </button>
                 </div>

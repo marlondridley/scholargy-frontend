@@ -1,6 +1,6 @@
-// frontend/src/App.js
+// src/App.js
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -14,13 +14,17 @@ import AuthCallback from './pages/AuthCallback';
 import ReportPage from './pages/ReportPage';
 import StudentVuePage from './pages/StudentVuePage';
 import CompareCollegesPage from './pages/CompareCollegesPage';
-import ProfilePage from './pages/ProfilePage';
+// Using your original ProfilePage for college details
+import ProfilePage from './pages/ProfilePage'; 
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Main />
+        <BrowserRouter>
+          <Main />
+        </BrowserRouter>
       </AuthProvider>
     </ErrorBoundary>
   );
@@ -33,18 +37,19 @@ const Main = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  // Unauthenticated users can only access login and the auth callback
+  // Routes for unauthenticated users
   if (!user) {
     return (
       <Routes>
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
   
-  // Authenticated but incomplete profile users are forced to the profile page
+  // Route for users who need to complete their profile
   if (!isProfileComplete) {
     return (
       <Layout>
@@ -56,7 +61,7 @@ const Main = () => {
     );
   }
 
-  // Main application routes for fully authenticated users
+  // Main application routes for authenticated users
   return (
     <Layout>
       <Routes>
@@ -67,11 +72,9 @@ const Main = () => {
         <Route path="/forecaster" element={<CareerForecasterPage />} />
         <Route path="/compare" element={<CompareCollegesPage />} />
         <Route path="/studentvue" element={<StudentVuePage />} />
-        {/* Note: Use URL params for dynamic routes */}
         <Route path="/report/:collegeId" element={<ReportPage />} />
+        {/* Restored the original route to use ProfilePage for college details */}
         <Route path="/profile/:collegeId" element={<ProfilePage />} />
-        
-        {/* Default route redirects to the dashboard */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>

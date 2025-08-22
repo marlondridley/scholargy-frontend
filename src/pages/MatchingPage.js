@@ -1,9 +1,12 @@
-// frontend/src/pages/MatchingPage.js
+// src/pages/MatchingPage.js
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { findMatchingScholarships } from '../services/api';
 
 const MatchingPage = () => {
     const { profile } = useAuth();
+    const navigate = useNavigate();
     const [matches, setMatches] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -18,18 +21,8 @@ const MatchingPage = () => {
         setMatches([]);
 
         try {
-            const response = await fetch('/api/matching/scholarships', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studentProfile: profile }),
-            });
-
-            if (!response.ok) {
-                throw new Error('The server could not process the matching request.');
-            }
-
-            const data = await response.json();
-            setMatches(data.matches || []);
+            const result = await findMatchingScholarships(profile);
+            setMatches(result.scholarships || result.data || []);
         } catch (err) {
             setError('Failed to fetch scholarship matches. Please try again later.');
             console.error(err);
@@ -41,39 +34,45 @@ const MatchingPage = () => {
     return (
         <div className="max-w-5xl mx-auto space-y-8">
             <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-800">AI Scholarship Matcher</h1>
-                <p className="text-gray-500 mt-2">Find scholarships tailored to your unique profile using AI.</p>
+                <h1 className="text-3xl font-bold text-gray-800">🎯 AI Scholarship Matcher</h1>
+                <p className="text-gray-500 mt-2">Discover scholarships perfectly tailored to your profile.</p>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm border text-center">
-                <p className="mb-4">Click the button below to find scholarships based on your saved student profile.</p>
+                <p className="mb-4 text-gray-600">Our AI will analyze your student profile to find the best scholarship opportunities for you.</p>
                 <button 
                     onClick={findMatches} 
                     disabled={isLoading || !profile} 
                     className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
                 >
-                    {isLoading ? 'Finding Matches...' : '✨ Find My Scholarships'}
+                    {isLoading ? 'Finding Your Matches...' : '✨ Find My Scholarships'}
                 </button>
+                {!profile && <p className="text-xs text-red-500 mt-2">Complete your profile to enable matching.</p>}
             </div>
 
-            {error && <p className="text-red-500 text-center">{error}</p>}
+            {error && <div className="p-4 bg-red-50 text-red-600 rounded-lg text-center">{error}</div>}
 
             {matches.length > 0 && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border space-y-4">
-                    <h2 className="text-xl font-bold text-gray-800">Your Top Scholarship Matches</h2>
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-gray-800">Your Top Matches</h2>
                     {matches.map(scholarship => (
-                        <div key={scholarship.id} className="border p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div 
+                            key={scholarship._id} 
+                            onClick={() => navigate(`/scholarship/${scholarship._id}`)}
+                            className="bg-white p-4 rounded-lg border shadow-sm hover:shadow-md hover:border-blue-500 cursor-pointer transition-colors"
+                        >
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h3 className="font-bold text-lg text-blue-800">{scholarship.title}</h3>
-                                    <p className="text-sm text-gray-600">{scholarship.organization}</p>
+                                    <p className="text-sm text-gray-600">{scholarship.provider}</p>
                                 </div>
                                 <div className="text-right flex-shrink-0 ml-4">
-                                    <p className="font-bold text-xl text-green-600">${scholarship.fundingAmount.toLocaleString()}</p>
-                                    <p className="text-xs text-purple-600 font-semibold">Relevance: {scholarship.relevance}</p>
+                                    <p className="font-bold text-xl text-green-600">${scholarship.amount?.toLocaleString() || scholarship.award_info?.funds?.amount?.toLocaleString() || '0'}</p>
+                                    <p className={`text-xs font-semibold px-2 py-1 rounded-full ${scholarship.relevance === 'High' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {scholarship.relevance || 'Good'} Match
+                                    </p>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-700 mt-2">{scholarship.description}</p>
                         </div>
                     ))}
                 </div>
