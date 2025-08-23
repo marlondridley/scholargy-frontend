@@ -91,7 +91,7 @@ const StudentProfilePage = () => {
         setIsLoading(true);
         setAssessmentText('');
         const result = await getProfileAssessment(profile);
-        setAssessmentText(result.assessmentText);
+        setAssessmentText(result.assessment?.summary || 'Assessment completed successfully.');
         setIsLoading(false);
     };
 

@@ -15,6 +15,17 @@ export async function getDashboardData(userId, profile = null) {
 
     console.log('Fetching dashboard data for userId:', userId);
 
+    // Check if backend is available first
+    try {
+      const healthCheck = await fetch('/health');
+      if (!healthCheck.ok) {
+        throw new Error('Backend health check failed');
+      }
+    } catch (healthError) {
+      console.warn('Backend appears to be offline:', healthError.message);
+      return getFallbackData(profile);
+    }
+
     // Fetch all required data in parallel with individual error handling
     const [studentProfile, collegeMatches, scholarships, careerInsights] = await Promise.allSettled([
       fetchStudentProfile(userId, profile),

@@ -59,6 +59,13 @@ export const makeRequest = async (endpoint, options = {}, requireAuth = false) =
         return response.json();
     } catch (error) {
         console.error(`API request failed for ${endpoint}:`, error);
+        
+        // Check if it's a network error (backend not running)
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            console.warn('Backend appears to be offline. Using fallback data.');
+            throw new Error('Backend service unavailable. Please ensure the backend is running.');
+        }
+        
         throw error;
     }
 };
@@ -112,7 +119,12 @@ export const updateProfile = (userId, profileData) => makeRequest(`/profile/${us
     method: 'PUT', 
     body: JSON.stringify({ profileData }) 
 }, true);
-export const getProfileAssessment = (userId) => makeRequest(`/profile/${userId}/assessment`, {}, true);
+// Generate an AI assessment of the provided profile data
+// Backend expects profile data in the request body rather than a user ID
+export const getProfileAssessment = (profileData) => makeRequest('/profile/assessment', {
+    method: 'POST',
+    body: JSON.stringify({ profileData })
+}, true);
 export const saveProfile = (userId, profileData) => makeRequest(`/profile/${userId}/save`, {
     method: 'POST',
     body: JSON.stringify({ profileData })
@@ -174,6 +186,9 @@ export const getScholarshipStatsByProfile = (studentProfile) => makeRequest('/sc
 });
 
 export const getUpcomingScholarshipDeadlines = (days = 30) => makeRequest(`/scholarships/upcoming-deadlines?days=${days}`);
+
+// --- Article Functions ---
+export const searchArticles = (query) => makeRequest(`/articles/search?q=${encodeURIComponent(query)}`);
 
 export const findMatchingScholarships = (studentProfile) => makeRequest('/matching/scholarships', { 
     method: 'POST', 

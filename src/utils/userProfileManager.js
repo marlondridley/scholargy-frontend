@@ -48,8 +48,18 @@ export class UserProfileManager {
    */
   static async getUserAssessment(userId) {
     try {
-      const response = await makeRequest(`/profile/${userId}/assessment`, {}, true);
-      return response.data || response;
+      // First get the user profile, then generate assessment
+      const profile = await this.getUserProfile(userId);
+      if (!profile) {
+        console.warn('No profile found for assessment');
+        return null;
+      }
+      
+      const response = await makeRequest('/profile/assessment', {
+        method: 'POST',
+        body: JSON.stringify({ profileData: profile })
+      }, true);
+      return response.assessment || response;
     } catch (error) {
       console.error('Error fetching user assessment:', error);
       return null;
