@@ -3,6 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../utils/supabase';
 import { getProfile, createProfile } from '../services/api';
 import { handleSignInWithOAuth, extractGoogleTokens } from '../utils/googleAuth';
+import { userService } from '../services/userService';
 
 const AuthContext = createContext(null);
 
@@ -31,32 +32,8 @@ export const AuthProvider = ({ children }) => {
         const handleAuthChange = async (event, session) => {
             console.log(`Supabase auth event: ${event}`, session);
             
-            if (event === "SIGNED_IN" && session?.user) {
-                const user = session.user;
-                
-                try {
-                    // Store basic user data in localStorage for offline access
-                    const userData = {
-                        email: user.email,
-                        name: user.user_metadata?.full_name || user.email,
-                        img_url: user.user_metadata?.avatar_url,
-                        provider: user.app_metadata?.provider || 'email',
-                        created_at: new Date().toISOString(),
-                    };
-                    
-                    localStorage.setItem("user", JSON.stringify(userData));
-                    console.log("User data stored in localStorage:", userData);
-                    
-                    // Note: User profile data will be managed through the backend API
-                    // which connects to Azure CosmosDB for the actual user profile storage
-                    
-                } catch (error) {
-                    console.error("Error in handleAuthChange:", error);
-                }
-            } else if (event === "SIGNED_OUT") {
-                // Clear localStorage on sign out
-                localStorage.removeItem("user");
-            }
+            // Handle user management with the userService
+            await userService.handleAuthChange(event, session);
             
             setUser(session?.user ?? null);
             setLoading(false);
@@ -118,8 +95,7 @@ export const AuthProvider = ({ children }) => {
         setIsProfileComplete,
         loading,
         getUserData: () => {
-            const userData = localStorage.getItem("user");
-            return userData ? JSON.parse(userData) : null;
+            return userService.getUserFromLocalStorage();
         },
         signIn: async (data) => {
             try {

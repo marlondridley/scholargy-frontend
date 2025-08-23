@@ -2,7 +2,19 @@
 // Single, consolidated file for all API interactions
 import { supabase } from '../utils/supabase';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+// Get API URL from environment variables with fallback
+const getApiUrl = () => {
+    // Try different methods to get the API URL
+    if (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.REACT_APP_API_URL) {
+        return window.__ENV__.REACT_APP_API_URL;
+    }
+    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) {
+        return process.env.REACT_APP_API_URL;
+    }
+    return '/api'; // Fallback to relative path
+};
+
+const API_BASE_URL = getApiUrl();
 
 const getAuthHeaders = async () => {
     try {
@@ -31,7 +43,15 @@ export const makeRequest = async (endpoint, options = {}, requireAuth = false) =
                 throw new Error('Authentication required. Please log in again.');
             }
         }
-        const response = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
+        
+        // Configure fetch options with credentials
+        const fetchOptions = {
+            ...options,
+            headers: { ...headers, ...options.headers },
+            credentials: 'include', // Include credentials for cross-origin requests
+        };
+        
+        const response = await fetch(url, fetchOptions);
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
