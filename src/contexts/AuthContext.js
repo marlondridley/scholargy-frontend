@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
         const getInitialSession = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                setUser(session?.user ?? null);
+                setUser(session && session.user ? session.user : null);
             } catch (error) {
                 console.error('Failed to get initial session:', error);
                 setUser(null);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
             // Handle user management with the userService
             await userService.handleAuthChange(event, session);
             
-            setUser(session?.user ?? null);
+            setUser(session && session.user ? session.user : null);
             setLoading(false);
         };
 
@@ -59,9 +59,9 @@ export const AuthProvider = ({ children }) => {
                         // Create new user profile in CosmosDB through backend API
                         const newProfileData = {
                             email: user.email,
-                            fullName: user.user_metadata?.full_name,
-                            avatarUrl: user.user_metadata?.avatar_url,
-                            provider: user.app_metadata?.provider || 'email',
+                            fullName: user.user_metadata && user.user_metadata.full_name,
+                            avatarUrl: user.user_metadata && user.user_metadata.avatar_url,
+                            provider: (user.app_metadata && user.app_metadata.provider) || 'email',
                             // Add any additional fields needed for your application
                             gpa: null,
                             major: null,
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
                     
                     setProfile(userProfile);
                     // Check if profile is complete (has required fields like GPA)
-                    setIsProfileComplete(!!userProfile?.gpa); 
+                    setIsProfileComplete(userProfile && userProfile.gpa ? true : false); 
                 } catch (error) {
                     console.error("Error managing user profile:", error);
                     setProfile(null);
@@ -107,12 +107,11 @@ export const AuthProvider = ({ children }) => {
         },
         signUp: async (data) => {
             try {
-                return await supabase.auth.signUp({
-                    ...data,
+                return await supabase.auth.signUp(Object.assign({}, data, {
                     options: {
                         emailRedirectTo: `${window.location.origin}/auth/callback`,
                     }
-                });
+                }));
             } catch (error) {
                 console.error('Sign up error:', error);
                 throw error;
@@ -131,7 +130,7 @@ export const AuthProvider = ({ children }) => {
                 const result = await handleSignInWithOAuth();
                 
                 // Extract and store Google tokens if available
-                if (result.data?.session) {
+                if (result.data && result.data.session) {
                     extractGoogleTokens(result.data.session);
                 }
                 

@@ -10,7 +10,8 @@ const OAuthTester = () => {
     const [logs, setLogs] = useState([]);
 
     // Add log entry
-    const addLog = (message, type = 'info') => {
+    const addLog = (message, type) => {
+        if (!type) type = 'info';
         const timestamp = new Date().toLocaleTimeString();
         setLogs(prev => [...prev, { timestamp, message, type }]);
     };
@@ -48,7 +49,7 @@ const OAuthTester = () => {
             }
         });
 
-        setTestResults(prev => ({ ...prev, environment: allPassed }));
+        setTestResults(prev => Object.assign({}, prev, { environment: allPassed }));
         return allPassed;
     };
 
@@ -78,21 +79,21 @@ const OAuthTester = () => {
                 
                 if (storedUser.email === userData.email) {
                     addLog('✅ User data storage works', 'success');
-                    setTestResults(prev => ({ ...prev, localStorage: true }));
+                    setTestResults(prev => Object.assign({}, prev, { localStorage: true }));
                     return true;
                 } else {
                     addLog('❌ User data storage failed', 'error');
-                    setTestResults(prev => ({ ...prev, localStorage: false }));
+                    setTestResults(prev => Object.assign({}, prev, { localStorage: false }));
                     return false;
                 }
             } else {
                 addLog('❌ localStorage basic operations failed', 'error');
-                setTestResults(prev => ({ ...prev, localStorage: false }));
+                setTestResults(prev => Object.assign({}, prev, { localStorage: false }));
                 return false;
             }
         } catch (error) {
             addLog(`❌ localStorage test error: ${error.message}`, 'error');
-            setTestResults(prev => ({ ...prev, localStorage: false }));
+            setTestResults(prev => Object.assign({}, prev, { localStorage: false }));
             return false;
         }
     };
@@ -111,11 +112,11 @@ const OAuthTester = () => {
             const data = await response.json();
             addLog('✅ API connectivity successful', 'success');
             addLog(`   Response: ${JSON.stringify(data)}`, 'info');
-            setTestResults(prev => ({ ...prev, api: true }));
+            setTestResults(prev => Object.assign({}, prev, { api: true }));
             return true;
         } catch (error) {
             addLog(`❌ API connectivity failed: ${error.message}`, 'error');
-            setTestResults(prev => ({ ...prev, api: false }));
+            setTestResults(prev => Object.assign({}, prev, { api: false }));
             return false;
         }
     };
@@ -130,7 +131,7 @@ const OAuthTester = () => {
             
             if (error) {
                 addLog(`❌ OAuth test failed: ${error.message}`, 'error');
-                setTestResults(prev => ({ ...prev, oauth: false }));
+                setTestResults(prev => Object.assign({}, prev, { oauth: false }));
                 return false;
             }
 
@@ -138,11 +139,11 @@ const OAuthTester = () => {
             if (data?.url) {
                 addLog(`   Redirect URL: ${data.url}`, 'info');
             }
-            setTestResults(prev => ({ ...prev, oauth: true }));
+            setTestResults(prev => Object.assign({}, prev, { oauth: true }));
             return true;
         } catch (error) {
             addLog(`❌ OAuth test error: ${error.message}`, 'error');
-            setTestResults(prev => ({ ...prev, oauth: false }));
+            setTestResults(prev => Object.assign({}, prev, { oauth: false }));
             return false;
         }
     };
@@ -153,7 +154,7 @@ const OAuthTester = () => {
         
         if (!user) {
             addLog('⚠️ No user logged in, skipping profile test', 'warning');
-            setTestResults(prev => ({ ...prev, profile: false }));
+            setTestResults(prev => Object.assign({}, prev, { profile: false }));
             return false;
         }
 
@@ -172,16 +173,16 @@ const OAuthTester = () => {
                 addLog(`   Profile complete: ${isComplete}`, 'info');
                 addLog(`   Completion percentage: ${completionPercentage}%`, 'info');
                 
-                setTestResults(prev => ({ ...prev, profile: true }));
+                setTestResults(prev => Object.assign({}, prev, { profile: true }));
                 return true;
             } else {
                 addLog('⚠️ Profile initialization returned null (backend may not be running)', 'warning');
-                setTestResults(prev => ({ ...prev, profile: false }));
+                setTestResults(prev => Object.assign({}, prev, { profile: false }));
                 return false;
             }
         } catch (error) {
             addLog(`❌ Profile management test failed: ${error.message}`, 'error');
-            setTestResults(prev => ({ ...prev, profile: false }));
+            setTestResults(prev => Object.assign({}, prev, { profile: false }));
             return false;
         }
     };
@@ -196,7 +197,7 @@ const OAuthTester = () => {
             addLog('✅ User session exists', 'success');
             addLog(`   User ID: ${user.id}`, 'info');
             addLog(`   Email: ${user.email}`, 'info');
-            addLog(`   Provider: ${user.app_metadata?.provider || 'email'}`, 'info');
+            addLog(`   Provider: ${(user.app_metadata && user.app_metadata.provider) || 'email'}`, 'info');
             
             if (userData) {
                 addLog('✅ User data in localStorage', 'success');
@@ -205,11 +206,11 @@ const OAuthTester = () => {
                 addLog('⚠️ No user data in localStorage', 'warning');
             }
             
-            setTestResults(prev => ({ ...prev, session: true }));
+            setTestResults(prev => Object.assign({}, prev, { session: true }));
             return true;
         } else {
             addLog('ℹ️ No active user session', 'info');
-            setTestResults(prev => ({ ...prev, session: false }));
+            setTestResults(prev => Object.assign({}, prev, { session: false }));
             return false;
         }
     };

@@ -21,13 +21,13 @@ import ResetPasswordConfirmPage from './pages/ResetPasswordConfirmPage';
 import LoginPageV2 from './pages/LoginPageV2';
 import OAuthTester from './components/OAuthTester';
 
-import { testEnvironmentVariables } from './utils/envTest';
+import { logEnvironmentVariables } from './utils/envDiagnostic';
 
 function App() {
   console.log('App component rendering');
   
-  // Test environment variables
-  testEnvironmentVariables();
+  // Log environment variables
+  logEnvironmentVariables();
 
   return (
     <ErrorBoundary>
