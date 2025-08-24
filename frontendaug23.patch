@@ -1,0 +1,195 @@
+diff --git a/.github/workflows/main.yml b/.github/workflows/main.yml
+--- a/.github/workflows/main.yml
++++ b/.github/workflows/main.yml
+@@ -40,7 +40,7 @@ jobs:
+           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+           action: "upload"
+           app_location: "build" # Deploy the already built folder
+-          skip_app_build: true   # Prevent Oryx from rebuildinggit
++          skip_app_build: true   # Prevent Oryx from rebuilding
+diff --git a/BACKEND_SETUP.md b/BACKEND_SETUP.md
+new file mode 100644
+--- /dev/null
++++ b/BACKEND_SETUP.md
+@@
++# Backend Setup Guide
++...
++# Production Deployment
++
++For production, you'll need to:
++1. Deploy the backend to Azure App Service
++2. Set up environment variables in Azure
++3. Deploy the frontend to Azure Static Web Apps
++4. Configure the frontend to point to the production backend URL
+diff --git a/public/env-config.js b/public/env-config.js
+--- a/public/env-config.js
++++ b/public/env-config.js
+@@
+-    REACT_APP_SUPABASE_URL: '%REACT_APP_SUPABASE_URL%',
+-    REACT_APP_SUPABASE_ANON_KEY: '%REACT_APP_SUPABASE_ANON_KEY%',
+-    REACT_APP_API_URL: '%REACT_APP_API_URL%',
+-    REACT_APP_GOOGLE_CLIENT_ID: '%REACT_APP_GOOGLE_CLIENT_ID%'
++    REACT_APP_SUPABASE_URL: '',
++    REACT_APP_SUPABASE_ANON_KEY: '',
++    REACT_APP_API_URL: '',
++    REACT_APP_GOOGLE_CLIENT_ID: ''
+   };
+diff --git a/src/App.js b/src/App.js
+--- a/src/App.js
++++ b/src/App.js
+@@
+-import { testEnvironmentVariables } from './utils/envTest';
++import { logEnvironmentVariables } from './utils/envDiagnostic';
+@@
+-  // Test environment variables
+-  testEnvironmentVariables();
++  // Log environment variables
++  logEnvironmentVariables();
+diff --git a/src/components/OAuthTester.js b/src/components/OAuthTester.js
+--- a/src/components/OAuthTester.js
++++ b/src/components/OAuthTester.js
+@@
+-    const addLog = (message, type = 'info') => {
++    const addLog = (message, type) => {
++        if (!type) type = 'info';
+@@
+-        setTestResults(prev => ({ ...prev, environment: allPassed }));
++        setTestResults(prev => Object.assign({}, prev, { environment: allPassed }));
+@@
+-                    setTestResults(prev => ({ ...prev, localStorage: true }));
++                    setTestResults(prev => Object.assign({}, prev, { localStorage: true }));
+@@
+-            setTestResults(prev => ({ ...prev, api: true }));
++            setTestResults(prev => Object.assign({}, prev, { api: true }));
+@@
+-            setTestResults(prev => ({ ...prev, oauth: false }));
++            setTestResults(prev => Object.assign({}, prev, { oauth: false }));
+@@
+-            addLog(`   Provider: ${user.app_metadata?.provider || 'email'}`, 'info');
++            addLog(`   Provider: ${(user.app_metadata && user.app_metadata.provider) || 'email'}`, 'info');
+diff --git a/src/contexts/AuthContext.js b/src/contexts/AuthContext.js
+--- a/src/contexts/AuthContext.js
++++ b/src/contexts/AuthContext.js
+@@
+-                const { data: { session } } = await supabase.auth.getSession();
+-                setUser(session?.user ?? null);
++                const { data: { session } } = await supabase.auth.getSession();
++                setUser(session && session.user ? session.user : null);
+@@
+-                            fullName: user.user_metadata?.full_name,
+-                            avatarUrl: user.user_metadata?.avatar_url,
+-                            provider: user.app_metadata?.provider || 'email',
++                            fullName: user.user_metadata && user.user_metadata.full_name,
++                            avatarUrl: user.user_metadata && user.user_metadata.avatar_url,
++                            provider: (user.app_metadata && user.app_metadata.provider) || 'email',
+diff --git a/src/pages/StudentProfilePage.js b/src/pages/StudentProfilePage.js
+--- a/src/pages/StudentProfilePage.js
++++ b/src/pages/StudentProfilePage.js
+@@
+-        const result = await getProfileAssessment(profile);
+-        setAssessmentText(result.assessmentText);
++        const result = await getProfileAssessment(profile);
++        setAssessmentText(result.assessment?.summary || 'Assessment completed successfully.');
+diff --git a/src/services/api.js b/src/services/api.js
+--- a/src/services/api.js
++++ b/src/services/api.js
+@@
+-        console.error(`API request failed for ${endpoint}:`, error);
++        console.error(`API request failed for ${endpoint}:`, error);
++        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
++            console.warn('Backend appears to be offline. Using fallback data.');
++            throw new Error('Backend service unavailable. Please ensure the backend is running.');
++        }
+         throw error;
+@@
+-export const getProfileAssessment = (userId) => makeRequest(`/profile/${userId}/assessment`, {}, true);
++export const getProfileAssessment = (profileData) => makeRequest('/profile/assessment', {
++    method: 'POST',
++    body: JSON.stringify({ profileData })
++}, true);
+@@
++export const searchArticles = (query) => makeRequest(`/articles/search?q=${encodeURIComponent(query)}`);
+diff --git a/src/utils/dashboardHelpers.js b/src/utils/dashboardHelpers.js
+--- a/src/utils/dashboardHelpers.js
++++ b/src/utils/dashboardHelpers.js
+@@
+     console.log('Fetching dashboard data for userId:', userId);
+
++    // Check if backend is available first
++    try {
++      const healthCheck = await fetch('/health');
++      if (!healthCheck.ok) {
++        throw new Error('Backend health check failed');
++      }
++    } catch (healthError) {
++      console.warn('Backend appears to be offline:', healthError.message);
++      return getFallbackData(profile);
++    }
+diff --git a/src/utils/envDiagnostic.js b/src/utils/envDiagnostic.js
+new file mode 100644
+--- /dev/null
++++ b/src/utils/envDiagnostic.js
+@@
++// src/utils/envDiagnostic.js
++export const logEnvironmentVariables = () => {
++  console.log("=== Environment Variables ===");
++  console.log("NODE_ENV:", process.env.NODE_ENV);
++  console.log("REACT_APP_SUPABASE_URL:", process.env.REACT_APP_SUPABASE_URL || "NOT SET");
++  console.log("REACT_APP_SUPABASE_ANON_KEY:", process.env.REACT_APP_SUPABASE_ANON_KEY ? "***" : "NOT SET");
++  console.log("REACT_APP_API_URL:", process.env.REACT_APP_API_URL || "NOT SET");
++  console.log("REACT_APP_GOOGLE_CLIENT_ID:", process.env.REACT_APP_GOOGLE_CLIENT_ID || "NOT SET");
++  console.log("==============================");
++};
++
++export const getEnvVar = (varName) => {
++  return process.env[varName] || null;
++};
++
++export const checkRequiredEnvVars = () => {
++  const requiredVars = [
++    'REACT_APP_SUPABASE_URL',
++    'REACT_APP_SUPABASE_ANON_KEY',
++    'REACT_APP_API_URL'
++  ];
++
++  const missing = [];
++  const available = {};
++
++  requiredVars.forEach(varName => {
++    const value = getEnvVar(varName);
++    if (value) {
++      available[varName] = value;
++    } else {
++      missing.push(varName);
++    }
++  });
++
++  return {
++    allAvailable: missing.length === 0,
++    missing,
++    available
++  };
++};
+diff --git a/src/utils/envTest.js b/src/utils/envTest.js
+deleted file mode 100644
+--- a/src/utils/envTest.js
++++ /dev/null
+@@
+-// Environment Variable Test
+-// ... entire file deleted ...
+diff --git a/src/utils/userProfileManager.js b/src/utils/userProfileManager.js
+--- a/src/utils/userProfileManager.js
++++ b/src/utils/userProfileManager.js
+@@
+-      const response = await makeRequest(`/profile/${userId}/assessment`, {}, true);
+-      return response.data || response;
++      const profile = await this.getUserProfile(userId);
++      if (!profile) {
++        console.warn('No profile found for assessment');
++        return null;
++      }
++      const response = await makeRequest('/profile/assessment', {
++        method: 'POST',
++        body: JSON.stringify({ profileData: profile })
++      }, true);
++      return response.assessment || response;

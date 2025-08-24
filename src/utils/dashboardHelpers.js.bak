@@ -15,25 +15,7 @@ export async function getDashboardData(userId, profile = null) {
 
     console.log('Fetching dashboard data for userId:', userId);
 
-// Check if backend is available first
-try {
-  const healthCheck = await fetch('/health');
-  if (!healthCheck.ok) {
-    throw new Error('Backend health check failed');
-  }
-} catch (healthError) {
-  console.warn('Backend appears to be offline:', healthError.message);
-  return getFallbackData(profile);
-}// Check if backend is available first
-try {
-  const healthCheck = await fetch('/health');
-  if (!healthCheck.ok) {
-    throw new Error('Backend health check failed');
-  }
-} catch (healthError) {
-  console.warn('Backend appears to be offline:', healthError.message);
-  return getFallbackData(profile);
-}// Check if backend is available first
+    // Check if backend is available first
     try {
       const healthCheck = await fetch('/health');
       if (!healthCheck.ok) {

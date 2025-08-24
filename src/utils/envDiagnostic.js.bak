@@ -1,4 +1,6 @@
 // src/utils/envDiagnostic.js
+
+// Simple environment variable logger for Create React App
 export const logEnvironmentVariables = () => {
   console.log("=== Environment Variables ===");
   console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -9,20 +11,22 @@ export const logEnvironmentVariables = () => {
   console.log("==============================");
 };
 
+// Simple getter function for environment variables
 export const getEnvVar = (varName) => {
   return process.env[varName] || null;
 };
 
+// Check if all required environment variables are available
 export const checkRequiredEnvVars = () => {
   const requiredVars = [
-    "REACT_APP_SUPABASE_URL",
-    "REACT_APP_SUPABASE_ANON_KEY",
-    "REACT_APP_API_URL"
+    'REACT_APP_SUPABASE_URL',
+    'REACT_APP_SUPABASE_ANON_KEY',
+    'REACT_APP_API_URL'
   ];
-
+  
   const missing = [];
   const available = {};
-
+  
   requiredVars.forEach(varName => {
     const value = getEnvVar(varName);
     if (value) {
@@ -31,7 +35,7 @@ export const checkRequiredEnvVars = () => {
       missing.push(varName);
     }
   });
-
+  
   return {
     allAvailable: missing.length === 0,
     missing,
