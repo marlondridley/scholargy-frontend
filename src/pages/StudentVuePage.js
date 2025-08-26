@@ -1,218 +1,205 @@
 import React, { useState } from 'react';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-const GradeTrajectoryChart = ({ course }) => {
-  if (!course?.Assignments?.Assignment) return null;
-
-  const labels = course.Assignments.Assignment.map(a => a['@Measure']);
-  const scores = course.Assignments.Assignment.map(a => {
-    const parts = a['@Score'].split('/');
-    if (parts.length !== 2) return null;
-    const score = parseFloat(parts[0]);
-    const total = parseFloat(parts[1]);
-    if (isNaN(score) || isNaN(total) || total === 0) return null;
-    return (score / total) * 100;
-  }).filter(s => s !== null);
-
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: 'Assignment Score (%)',
-        data: scores,
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      title: { display: true, text: `Grade Trajectory for ${course['@Title']}` },
-    },
-    scales: { y: { min: 0, max: 100 } },
-  };
-
-  return <Line options={options} data={data} />;
-};
+import { useNavigate } from 'react-router-dom';
 
 const StudentVuePage = () => {
-  const [credentials, setCredentials] = useState({ districtUrl: '', username: '', password: '' });
-  const [studentData, setStudentData] = useState(null);
+  const [credentials, setCredentials] = useState({
+    districtUrl: '',
+    username: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [selectedCourseForChart, setSelectedCourseForChart] = useState(null);
+  const [data, setData] = useState(null);
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleFetchData = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setStudentData(null);
-    setSelectedCourseForChart(null);
 
     try {
-      const res = await fetch('/studentvue', {
+      const response = await fetch('/api/studentvue', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(credentials),
       });
 
-      const result = await res.json();
-      if (!res.ok || !result.success) {
-        throw new Error(result.message || 'Failed to fetch data.');
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data);
+      } else {
+        setError(result.error || 'Failed to fetch student data');
       }
-
-      setStudentData(result.data);
-      setSelectedCourseForChart(result.data.gradebook?.Courses?.Course?.[0] || null);
     } catch (err) {
-      console.error('StudentVue fetch error:', err.message);
-      setError(err.message || 'Something went wrong.');
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-800">StudentVue Connect</h1>
-        <p className="text-gray-500 mt-2">Monitor your student's academic progress in real-time.</p>
-      </div>
-
-      <div className="bg-white p-6 rounded-xl shadow-sm border">
-        <form onSubmit={handleFetchData} className="space-y-4">
-          <input
-            name="districtUrl"
-            value={credentials.districtUrl}
-            onChange={handleChange}
-            placeholder="District URL (e.g., https://portal.yourschool.edu)"
-            className="w-full p-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              name="username"
-              value={credentials.username}
-              onChange={handleChange}
-              placeholder="Username"
-              className="w-full p-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              name="password"
-              type="password"
-              value={credentials.password}
-              onChange={handleChange}
-              placeholder="Password"
-              className="w-full p-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 transition-all disabled:bg-gray-400"
-          >
-            {loading ? 'Connecting...' : 'Fetch Student Data'}
-          </button>
-        </form>
-      </div>
-
-      {studentData && (
-        <div className="space-y-6">
-          {selectedCourseForChart && (
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Grade Point Trajectory</h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Visualize assignment performance over time for a selected course.
-              </p>
-              <GradeTrajectoryChart course={selectedCourseForChart} />
-            </div>
-          )}
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Course Details & Progress</h2>
-            <ul className="space-y-4">
-              {studentData.gradebook?.Courses?.Course?.map((course) => {
-                const total = course.Assignments?.Assignment?.length || 0;
-                const progress = total > 0 ? (total / total) * 100 : 0;
-
-                return (
-                  <li key={course['@Title']} className="p-4 bg-gray-50 rounded-lg border">
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <p className="font-semibold text-lg">{course['@Title']}</p>
-                        <p className="text-sm text-gray-500">{course['@Teacher']}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-bold text-2xl text-green-600">{course['@Grade']}</span>
-                        <button
-                          onClick={() => setSelectedCourseForChart(course)}
-                          className="text-xs text-blue-500 hover:underline ml-2"
-                        >
-                          Show Trend
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-xs text-gray-500">
-                        <span>Course Progress</span>
-                        <span>{progress.toFixed(0)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <h4 className="font-semibold text-sm mb-2">Recent Assignments:</h4>
-                      <ul className="space-y-2 text-sm">
-                        {course.Assignments?.Assignment?.map((assignment) => (
-                          <li key={assignment['@Measure']} className="border-t pt-2">
-                            <div className="flex justify-between">
-                              <span>{assignment['@Measure']}</span>
-                              <span className="font-medium">{assignment['@Score']}</span>
-                            </div>
-                            {assignment['@Notes'] && (
-                              <p className="text-xs text-gray-500 mt-1 italic">
-                                Teacher Comment: "{assignment['@Notes']}"
-                              </p>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            StudentVue Integration
+          </h1>
+          <p className="text-gray-600">
+            Connect your StudentVue account to import your academic data
+          </p>
         </div>
-      )}
+
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="districtUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                District URL
+              </label>
+              <input
+                type="url"
+                id="districtUrl"
+                name="districtUrl"
+                value={credentials.districtUrl}
+                onChange={handleInputChange}
+                placeholder="https://your-district.studentvue.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={credentials.username}
+                onChange={handleInputChange}
+                placeholder="Your StudentVue username"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={credentials.password}
+                onChange={handleInputChange}
+                placeholder="Your StudentVue password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Connecting...' : 'Connect StudentVue'}
+            </button>
+          </form>
+        </div>
+
+        {data && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Academic Data</h2>
+            
+            {data.gradebook && (
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-3">Gradebook</h3>
+                <div className="space-y-3">
+                  {data.gradebook.Courses?.Course?.map((course, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900">{course['@Title']}</h4>
+                      <p className="text-gray-600">Grade: {course['@Grade']}</p>
+                      <p className="text-gray-600">Teacher: {course['@Teacher']}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.attendance && (
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-3">Attendance</h3>
+                <div className="space-y-2">
+                  {data.attendance.Absences?.Absence?.map((absence, index) => (
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-700">{absence['@AbsenceDate']}</span>
+                      <span className={`px-2 py-1 rounded text-sm ${
+                        absence['@Reason'] === 'Excused' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {absence['@Reason']}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.profile && (
+              <div>
+                <h3 className="text-lg font-medium text-gray-800 mb-3">Profile</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-600">Grade Level:</span>
+                    <span className="ml-2 font-medium">{data.profile.gradeLevel}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">GPA:</span>
+                    <span className="ml-2 font-medium">{data.profile.gpa}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Total Credits:</span>
+                    <span className="ml-2 font-medium">{data.profile.totalCredits}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Graduation Year:</span>
+                    <span className="ml-2 font-medium">{data.profile.graduationYear}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="text-center mt-6">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -44,11 +44,14 @@ export const makeRequest = async (endpoint, options = {}, requireAuth = false) =
             }
         }
         
-        // Configure fetch options with credentials
+        // Configure fetch options
+        // We use Bearer tokens in Authorization header, not cookies.
+        // For cross-origin, omit credentials to avoid CORS credential requirements.
         const fetchOptions = {
             ...options,
             headers: { ...headers, ...options.headers },
-            credentials: 'include', // Include credentials for cross-origin requests
+            credentials: 'omit',
+            mode: 'cors',
         };
         
         const response = await fetch(url, fetchOptions);

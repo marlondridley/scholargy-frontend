@@ -3,25 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@react-oauth/google": "^0.12.1",
-    "@supabase/auth-ui-react": "^0.4.7",
-    "@supabase/auth-ui-shared": "^0.1.8",
-    "@supabase/supabase-js": "^2.56.0",
+    "@supabase/supabase-js": "^2.39.0",
     "@tailwindcss/typography": "^0.5.10",
     "chart.js": "^4.4.1",
-    "google-auth-library": "^10.2.1",
-    "lucide-react": "^0.541.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.30.1",
-    "react-scripts": "5.0.1",
-    "studentvue": "^1.0.0"
+    "react-router-dom": "^6.8.0",
+    "react-scripts": "4.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "cross-env CI=false react-scripts build",
-    "build:swa": "node scripts/build-with-env.js && cross-env CI=false react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx"
@@ -45,11 +38,12 @@
     ]
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
-    "tailwindcss": "^3.3.5"
+    "tailwindcss": "^3.3.5",
+    "ajv": "6.12.4",
+    "ajv-keywords": "3.5.2"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
   }
 }
